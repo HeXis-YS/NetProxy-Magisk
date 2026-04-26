@@ -15,10 +15,7 @@ NetProxy 使用 Xray-core 作为代理核心，配置文件采用模块化设计
 │   ├── 05_api.json        # API 配置
 │   └── 06_outbounds.json  # 出站配置
 └── outbounds/             # 节点配置目录
-    ├── default.json       # 默认节点
-    └── sub_订阅名/        # 订阅节点目录
-        ├── _meta.json     # 订阅元信息
-        └── 节点.json
+    └── default/           # 默认节点目录
 ```
 
 ## 配置加载

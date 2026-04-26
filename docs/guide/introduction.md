@@ -5,7 +5,7 @@ NetProxy 是一个基于 Xray-core 的 Android 透明代理模块，支持 Magis
 ## 特性
 
 - **透明代理**：基于 TProxy 实现
-- **WebUI 管理**：美观的 Web 界面，支持节点、订阅、规则管理
+- **WebUI 管理**：美观的 Web 界面，支持节点和规则管理
 - **多协议支持**：VLESS、VMess、Trojan、Shadowsocks、Hysteria2 等
 - **规则分流**：支持 GeoIP、GeoSite 规则，可自定义路由策略
 - **分应用代理**：可设置黑白名单，按需代理指定应用

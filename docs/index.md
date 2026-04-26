@@ -22,7 +22,7 @@ features:
     details: 基于 TProxy 实现全局透明代理。
   - icon: 📱
     title: WebUI 管理
-    details: 内置美观的 Web 管理界面，支持节点管理、订阅更新、规则配置等功能。
+    details: 内置美观的 Web 管理界面，支持节点管理、规则配置等功能。
   - icon: ⚡
     title: Xray 核心
     details: 使用高性能的 Xray-core，支持 VLESS、VMess、Trojan、Shadowsocks 等多种协议。

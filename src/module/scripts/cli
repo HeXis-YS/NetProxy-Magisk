@@ -19,12 +19,6 @@
 #   config remove <名称> 删除配置
 #   config show <名称>  查看配置内容
 #
-#   sub list            列出所有订阅
-#   sub add <名称> <URL> 添加订阅
-#   sub update <名称>   更新指定订阅
-#   sub update-all      更新所有订阅
-#   sub remove <名称>   删除订阅
-#
 #   proxy mode          查看代理模式
 #   proxy mode <模式>   设置代理模式 (blacklist/whitelist)
 #   proxy apps          列出代理应用列表
@@ -225,30 +219,6 @@ cmd_config() {
                     echo "    $name"
                 fi
             done
-            
-            # 列出订阅分组
-            for sub_dir in "$OUTBOUNDS_DIR"/sub_*; do
-                [ -d "$sub_dir" ] || continue
-                local meta_file="$sub_dir/_meta.json"
-                [ -f "$meta_file" ] || continue
-                
-                local sub_name=$(grep -o '"name": *"[^"]*"' "$meta_file" | sed 's/"name": *"\([^"]*\)"/\1/')
-                echo ""
-                echo "[订阅: $sub_name]"
-                
-                for f in "$sub_dir"/*.json; do
-                    [ -f "$f" ] || continue
-                    local name=$(basename "$f")
-                    [ "$name" = "_meta.json" ] && continue
-                    
-                    local full_path="$f"
-                    if [ "$full_path" = "$current" ] || [ "$name" = "$current" ]; then
-                        printf "  ${GREEN}* %s${NC} (当前)\n" "$name"
-                    else
-                        echo "    $name"
-                    fi
-                done
-            done
             echo ""
             ;;
         
@@ -266,18 +236,6 @@ cmd_config() {
                 config_path="$OUTBOUNDS_DIR/$config_name"
             elif [ -f "$OUTBOUNDS_DIR/${config_name}.json" ]; then
                 config_path="$OUTBOUNDS_DIR/${config_name}.json"
-            else
-                # 在订阅目录查找
-                for sub_dir in "$OUTBOUNDS_DIR"/sub_*; do
-                    [ -d "$sub_dir" ] || continue
-                    if [ -f "$sub_dir/$config_name" ]; then
-                        config_path="$sub_dir/$config_name"
-                        break
-                    elif [ -f "$sub_dir/${config_name}.json" ]; then
-                        config_path="$sub_dir/${config_name}.json"
-                        break
-                    fi
-                done
             fi
             
             if [ -z "$config_path" ]; then
@@ -331,18 +289,6 @@ cmd_config() {
                 config_path="$OUTBOUNDS_DIR/$config_name"
             elif [ -f "$OUTBOUNDS_DIR/${config_name}.json" ]; then
                 config_path="$OUTBOUNDS_DIR/${config_name}.json"
-            else
-                # 在订阅目录查找
-                for sub_dir in "$OUTBOUNDS_DIR"/sub_*; do
-                    [ -d "$sub_dir" ] || continue
-                    if [ -f "$sub_dir/$config_name" ]; then
-                        config_path="$sub_dir/$config_name"
-                        break
-                    elif [ -f "$sub_dir/${config_name}.json" ]; then
-                        config_path="$sub_dir/${config_name}.json"
-                        break
-                    fi
-                done
             fi
             
             if [ -z "$config_path" ]; then
@@ -375,18 +321,6 @@ cmd_config() {
                 config_path="$OUTBOUNDS_DIR/$config_name"
             elif [ -f "$OUTBOUNDS_DIR/${config_name}.json" ]; then
                 config_path="$OUTBOUNDS_DIR/${config_name}.json"
-            else
-                # 在订阅目录查找
-                for sub_dir in "$OUTBOUNDS_DIR"/sub_*; do
-                    [ -d "$sub_dir" ] || continue
-                    if [ -f "$sub_dir/$config_name" ]; then
-                        config_path="$sub_dir/$config_name"
-                        break
-                    elif [ -f "$sub_dir/${config_name}.json" ]; then
-                        config_path="$sub_dir/${config_name}.json"
-                        break
-                    fi
-                done
             fi
             
             if [ -z "$config_path" ]; then
@@ -410,96 +344,6 @@ cmd_config() {
             echo "  add <节点链接>    添加节点"
             echo "  remove <名称>     删除配置"
             echo "  show <名称>       查看配置内容"
-            ;;
-    esac
-}
-
-#######################################
-# 订阅管理
-#######################################
-cmd_sub() {
-    local subcmd="${1:-}"
-    shift 2>/dev/null || true
-    
-    case "$subcmd" in
-        list)
-            echo "=============================="
-            echo "       订阅列表"
-            echo "=============================="
-            
-            local count=0
-            for sub_dir in "$OUTBOUNDS_DIR"/sub_*; do
-                [ -d "$sub_dir" ] || continue
-                local meta_file="$sub_dir/_meta.json"
-                [ -f "$meta_file" ] || continue
-                
-                local name=$(grep -o '"name": *"[^"]*"' "$meta_file" | sed 's/"name": *"\([^"]*\)"/\1/')
-                local updated=$(grep -o '"updated": *"[^"]*"' "$meta_file" | sed 's/"updated": *"\([^"]*\)"/\1/')
-                local node_count=$(find "$sub_dir" -name "*.json" ! -name "_meta.json" 2>/dev/null | wc -l)
-                
-                echo ""
-                echo "名称: $name"
-                echo "  节点数: $node_count"
-                echo "  更新时间: $updated"
-                
-                count=$((count + 1))
-            done
-            
-            if [ "$count" -eq 0 ]; then
-                echo ""
-                echo "暂无订阅"
-            fi
-            echo ""
-            ;;
-        
-        add)
-            local name="${1:-}"
-            local url="${2:-}"
-            
-            if [ -z "$name" ] || [ -z "$url" ]; then
-                error "用法: cli sub add <名称> <URL>"
-            fi
-            
-            info "添加订阅: $name"
-            sh "$SCRIPTS_DIR/config/subscription.sh" add "$name" "$url"
-            ;;
-        
-        update)
-            local name="${1:-}"
-            
-            if [ -z "$name" ]; then
-                error "用法: cli sub update <名称>"
-            fi
-            
-            info "更新订阅: $name"
-            sh "$SCRIPTS_DIR/config/subscription.sh" update "$name"
-            ;;
-        
-        update-all)
-            info "更新所有订阅..."
-            sh "$SCRIPTS_DIR/config/subscription.sh" update-all
-            ;;
-        
-        remove)
-            local name="${1:-}"
-            
-            if [ -z "$name" ]; then
-                error "用法: cli sub remove <名称>"
-            fi
-            
-            info "删除订阅: $name"
-            sh "$SCRIPTS_DIR/config/subscription.sh" remove "$name"
-            ;;
-        
-        *)
-            echo "用法: cli sub <命令>"
-            echo ""
-            echo "命令:"
-            echo "  list              列出所有订阅"
-            echo "  add <名称> <URL>  添加订阅"
-            echo "  update <名称>     更新指定订阅"
-            echo "  update-all        更新所有订阅"
-            echo "  remove <名称>     删除订阅"
             ;;
     esac
 }
@@ -694,13 +538,6 @@ NetProxy CLI - 命令行控制工具
   config remove <名称> 删除配置
   config show <名称>  查看配置内容
 
-订阅管理:
-  sub list            列出所有订阅
-  sub add <名称> <URL> 添加订阅
-  sub update <名称>   更新指定订阅
-  sub update-all      更新所有订阅
-  sub remove <名称>   删除订阅
-
 代理设置:
   proxy mode          查看代理模式
   proxy mode <模式>   设置代理模式 (blacklist/whitelist)
@@ -723,13 +560,6 @@ NetProxy CLI - 命令行控制工具
   adb shell su -c "/data/adb/modules/netproxy/scripts/cli config switch 节点名.json"
   adb shell su -c "/data/adb/modules/netproxy/scripts/cli config show 节点名"
   adb shell su -c "/data/adb/modules/netproxy/scripts/cli config remove 节点名"
-
-  # 订阅管理
-  adb shell su -c "/data/adb/modules/netproxy/scripts/cli sub list"
-  adb shell su -c "/data/adb/modules/netproxy/scripts/cli sub add '机场A' 'https://example.com/sub'"
-  adb shell su -c "/data/adb/modules/netproxy/scripts/cli sub update '机场A'"
-  adb shell su -c "/data/adb/modules/netproxy/scripts/cli sub update-all"
-  adb shell su -c "/data/adb/modules/netproxy/scripts/cli sub remove '机场A'"
 
   # 代理设置
   adb shell su -c "/data/adb/modules/netproxy/scripts/cli proxy mode"
@@ -765,9 +595,6 @@ main() {
             ;;
         config)
             cmd_config "$@"
-            ;;
-        sub|subscription)
-            cmd_sub "$@"
             ;;
         proxy)
             cmd_proxy "$@"

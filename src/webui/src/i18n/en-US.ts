@@ -74,17 +74,12 @@ const enUS: Record<string, string> = {
   "config.test_all": "Test All",
   "config.sort_latency": "Sort by Latency",
   "config.clean_invalid": "Clean Invalid",
-  "config.update_sub": "Update Sub",
-  "config.delete_sub": "Delete Sub",
   "config.current": "Current",
   "config.test": "Test",
   "config.import": "Import",
-  "config.add_sub": "Add Sub",
   "config.upload": "Upload",
   "config.clipboard": "Clipboard",
   "config.delete_confirm": 'Delete node "{name}"?',
-  "config.delete_sub_confirm":
-    'Delete subscription "{name}"?\nAll nodes in this subscription will be deleted.',
   "config.switch_success": "Switched to: {name}",
 
   // Logs Page
@@ -272,8 +267,6 @@ const enUS: Record<string, string> = {
   "config.menu.test_all": "Test All",
   "config.menu.sort": "Sort by Latency",
   "config.menu.clean": "Clean Invalid",
-  "config.menu.update_sub": "Update Subscription",
-  "config.menu.delete_sub": "Delete Subscription",
   "config.menu.edit": "Edit",
   "config.menu.test": "Test",
   "config.menu.delete": "Delete",
@@ -292,16 +285,7 @@ const enUS: Record<string, string> = {
   "config.toast.delete_failed": "Delete failed: ",
   "config.toast.switch_success": "Switched to: ",
   "config.toast.switch_failed": "Switch failed: ",
-  "config.toast.updating_sub": "Updating subscription...",
-  "config.toast.sub_updated": "Subscription updated",
   "config.toast.update_failed": "Update failed: ",
-  "config.confirm.delete_sub":
-    'Delete subscription "{name}"?\n\nAll nodes in it will be deleted.',
-  "config.toast.sub_deleted": "Subscription deleted",
-  "config.toast.enter_sub_name": "Enter subscription name",
-  "config.toast.enter_sub_url": "Enter subscription URL",
-  "config.toast.downloading_sub": "Downloading, please wait...",
-  "config.toast.sub_added": "Subscription added",
   "config.toast.add_failed": "Add failed: ",
   "config.toast.enter_filename": "Enter filename",
   "config.toast.filename_json": "Filename must end with .json",
@@ -334,13 +318,6 @@ const enUS: Record<string, string> = {
   "config.link_label": "Node Link",
   "config.link_placeholder":
     "Support: vless://, vmess://, trojan://, ss://, socks://, http://, https://",
-  "config.add_sub_title": "Add Subscription",
-  "config.sub_name_label": "Name",
-  "config.sub_name_placeholder": "e.g. Provider A",
-  "config.sub_url_label": "URL",
-  "config.sub_url_placeholder": "https://example.com/sub",
-  "config.sub_helper": "Supports Base64 encoded links",
-
   // Proxy Page Detail
   "settings.proxy.group_core": "Core Config",
   "settings.proxy.group_interfaces": "Interfaces",

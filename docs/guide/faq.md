@@ -63,7 +63,6 @@ cat /data/adb/modules/netproxy/logs/xray.log
 **A:** 日志位于 `/data/adb/modules/netproxy/logs/` 目录：
 - `service.log` - 服务启停日志
 - `xray.log` - Xray 核心日志
-- `subscription.log` - 订阅更新日志
 
 ### Q: 如何完全卸载
 

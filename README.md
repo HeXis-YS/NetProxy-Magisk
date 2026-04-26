@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Android System-Level Xray Transparent Proxy Module</strong><br>
-  Supports TPROXY, UDP, IPv6, Per-App Proxy, Subscription Management
+  Supports TPROXY, UDP, IPv6, Per-App Proxy, and Routing Management
 </p>
 
 <p align="center">
@@ -34,7 +34,6 @@
 | **Per-App Proxy** | Blacklist / Whitelist mode for precise proxy control |
 | **Routing Rules** | Custom domain, IP, port and other routing rules |
 | **DNS Settings** | Custom DNS servers and static Hosts mapping |
-| **Subscription** | Add and update subscriptions online, auto-parse nodes |
 | **Hotspot Sharing** | Proxy WiFi hotspot and USB tethering traffic |
 | **Hot Switch** | Switch nodes without restarting the service |
 
@@ -81,13 +80,12 @@
 │   │   │   ├── 04_outbounds.json
 │   │   │   └── 05_policy.json
 │   │   └── outbounds/        # Outbound node group directories
-│   │       ├── default/      # Default node group
-│   │       └── sub_xxx/      # Subscription group directories
+│   │       └── default/      # Default node group
 │   ├── tproxy/
 │   │   └── tproxy.conf       # Transparent proxy configuration
 │   └── module.conf           # Module settings (autostart, etc.)
 ├── logs/                     # Runtime logs
-├── scripts/                  # Start, stop, subscription scripts
+├── scripts/                  # Start and stop scripts
 ├── webroot/                  # WebUI static resources
 └── service.sh                # Module entry point
 ```
@@ -96,19 +94,7 @@
 
 ## Quick Start
 
-### Method 1: Import Node Link (Recommended)
-
-In the WebUI Config page, click **Add → Add Node** and paste your node link:
-
-```
-vless://... or vmess://... or trojan://... etc.
-```
-
-### Method 2: Import Subscription
-
-Click **Add → Add Subscription**, enter the subscription name and URL to auto-parse all nodes.
-
-### Method 3: Manual Configuration
+### Manual Configuration
 
 Create a JSON config file in the `outbounds/default` directory:
 

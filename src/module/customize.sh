@@ -33,7 +33,6 @@ readonly EXECUTABLE_FILES="
     scripts/core/switch-config.sh
     scripts/core/switch-mode.sh
     scripts/network/tproxy.sh
-    scripts/config/subscription.sh
     scripts/utils/update-xray.sh
     scripts/utils/oneplus_a16_fix.sh
 "

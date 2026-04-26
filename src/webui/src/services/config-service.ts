@@ -1,20 +1,10 @@
 import { KSU } from "./ksu.js";
 
 interface ConfigGroup {
-  type: "default" | "subscription";
+  type: "default";
   name: string;
   dirName: string;
   configs: string[];
-  url?: string;
-  updated?: string;
-}
-
-interface Subscription {
-  name: string;
-  dirName: string;
-  url?: string;
-  updated?: string;
-  nodeCount?: number;
 }
 
 interface ConfigInfo {
@@ -56,24 +46,6 @@ export class ConfigService {
         });
       }
     } catch (e) { }
-
-    // 获取订阅分组
-    const subscriptions = await this.getSubscriptions();
-    for (const sub of subscriptions) {
-      try {
-        const files = await KSU.exec(
-          `find ${outboundsDir}/${sub.dirName} -name '*.json' ! -name '_meta.json' -exec basename {} \\;`,
-        );
-        groups.push({
-          type: "subscription",
-          name: sub.name,
-          dirName: sub.dirName,
-          url: sub.url,
-          updated: sub.updated,
-          configs: files.split("\n").filter((f) => f),
-        });
-      } catch (e) { }
-    }
 
     return groups;
   }
@@ -169,51 +141,6 @@ EOF
       await KSU.exec(
         `sed -i 's|^CURRENT_CONFIG=.*|CURRENT_CONFIG="${configPath}"|' ${KSU.MODULE_PATH}/config/module.conf`,
       );
-    }
-  }
-
-  // ==================== 订阅管理 ====================
-
-  static async getSubscriptions(): Promise<Subscription[]> {
-    try {
-      const result = await KSU.exec(
-        `find ${KSU.MODULE_PATH}/config/xray/outbounds -mindepth 1 -maxdepth 1 -type d -name 'sub_*' -exec basename {} \\;`,
-      );
-      const subscriptions: Subscription[] = [];
-
-      for (const dir of result.split("\n").filter((d) => d)) {
-        const name = dir.replace(/^sub_/, "");
-        try {
-          const metaContent = await KSU.exec(
-            `cat ${KSU.MODULE_PATH}/config/xray/outbounds/${dir}/_meta.json`,
-          );
-          const meta = JSON.parse(metaContent);
-          const nodeCount = await KSU.exec(
-            `find ${KSU.MODULE_PATH}/config/xray/outbounds/${dir} -name '*.json' ! -name '_meta.json' | wc -l`,
-          );
-          subscriptions.push({
-            name: meta.name || name,
-            dirName: dir,
-            url: meta.url,
-            updated: meta.updated,
-            nodeCount: parseInt(nodeCount.trim()) || 0,
-          });
-        } catch (e) { }
-      }
-      return subscriptions;
-    } catch (error) {
-      return [];
-    }
-  }
-
-  static async removeSubscription(name: string): Promise<OperationResult> {
-    try {
-      await KSU.exec(
-        `sh ${KSU.MODULE_PATH}/scripts/config/subscription.sh remove '${name}'`,
-      );
-      return { success: true };
-    } catch (error: any) {
-      throw new Error(error.message || "删除订阅失败");
     }
   }
 

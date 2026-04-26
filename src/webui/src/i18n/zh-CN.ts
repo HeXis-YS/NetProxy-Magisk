@@ -74,17 +74,12 @@ const zhCN: Record<string, string> = {
   "config.test_all": "全部测试",
   "config.sort_latency": "按延迟排序",
   "config.clean_invalid": "清理无效节点",
-  "config.update_sub": "更新订阅",
-  "config.delete_sub": "删除订阅",
   "config.current": "当前",
   "config.test": "测试",
   "config.import": "导入配置",
-  "config.add_sub": "添加订阅",
   "config.upload": "上传配置",
   "config.clipboard": "从剪贴板导入",
   "config.delete_confirm": '确定要删除节点 "{name}" 吗？',
-  "config.delete_sub_confirm":
-    '确定要删除订阅 "{name}" 吗？\n该订阅下的所有节点都将被删除。',
   "config.switch_success": "已切换到: {name}",
 
   // Logs Page
@@ -268,8 +263,6 @@ const zhCN: Record<string, string> = {
   "config.menu.test_all": "全部测试",
   "config.menu.sort": "按延迟排序",
   "config.menu.clean": "清理无效节点",
-  "config.menu.update_sub": "更新订阅",
-  "config.menu.delete_sub": "删除订阅",
   "config.menu.edit": "编辑",
   "config.menu.test": "测试",
   "config.menu.delete": "删除",
@@ -288,16 +281,7 @@ const zhCN: Record<string, string> = {
   "config.toast.delete_failed": "删除失败: ",
   "config.toast.switch_success": "已切换到: ",
   "config.toast.switch_failed": "切换配置失败: ",
-  "config.toast.updating_sub": "正在更新订阅...",
-  "config.toast.sub_updated": "订阅更新成功",
   "config.toast.update_failed": "更新失败: ",
-  "config.confirm.delete_sub":
-    '确定要删除订阅 "{name}" 吗？\n\n该订阅下的所有节点都将被删除。',
-  "config.toast.sub_deleted": "订阅已删除",
-  "config.toast.enter_sub_name": "请输入订阅名称",
-  "config.toast.enter_sub_url": "请输入订阅地址",
-  "config.toast.downloading_sub": "正在下载订阅，请稍候...",
-  "config.toast.sub_added": "订阅添加成功",
   "config.toast.add_failed": "添加失败: ",
   "config.toast.enter_filename": "请输入文件名",
   "config.toast.filename_json": "文件名必须以 .json 结尾",
@@ -330,13 +314,6 @@ const zhCN: Record<string, string> = {
   "config.link_label": "节点链接",
   "config.link_placeholder":
     "支持: vless://, vmess://, trojan://, ss://, socks://, http://, https://",
-  "config.add_sub_title": "添加订阅",
-  "config.sub_name_label": "订阅名称",
-  "config.sub_name_placeholder": "例如: 机场A",
-  "config.sub_url_label": "订阅地址",
-  "config.sub_url_placeholder": "https://example.com/sub",
-  "config.sub_helper": "支持 Base64 编码的订阅链接",
-
   // Proxy Page Detail
   "settings.proxy.group_core": "核心配置",
   "settings.proxy.group_interfaces": "网卡接口",

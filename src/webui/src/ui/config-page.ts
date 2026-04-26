@@ -7,7 +7,6 @@ import type { UI } from "./ui-core.js";
 interface ConfigGroup {
   name: string;
   dirName?: string;
-  type?: string;
   configs: string[];
 }
 
@@ -426,17 +425,6 @@ export class ConfigPageManager {
         this.deleteInvalidNodes(group.name);
       });
       menu.appendChild(cleanItem);
-
-      // 订阅专用操作
-      if (group.type === "subscription") {
-        const deleteItem = document.createElement("mdui-menu-item");
-        deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("config.menu.delete_sub")}`;
-        deleteItem.addEventListener("click", () => {
-          dropdown.open = false;
-          this.deleteSubscription(group.dirName, group.name);
-        });
-        menu.appendChild(deleteItem);
-      }
 
       dropdown.appendChild(menu);
       actions.appendChild(dropdown);
@@ -912,27 +900,6 @@ export class ConfigPageManager {
       await this.ui.statusPage.update();
     } catch (error) {
       toast(I18nService.t("config.toast.switch_failed") + error.message);
-    }
-  }
-
-  // ===================== 订阅管理 =====================
-
-  async deleteSubscription(dirName, displayName) {
-    try {
-      const confirmed = await this.ui.confirm(
-        I18nService.t("config.confirm.delete_sub", { name: displayName }),
-      );
-      if (!confirmed) return;
-
-      // subscription.sh 期望传入的是订阅名称（不带 sub_ 前缀）
-      await ConfigService.removeSubscription(displayName);
-      toast(I18nService.t("config.toast.sub_deleted"));
-      // 清除缓存，强制刷新分组列表
-      this._cachedGroups = null;
-      this._cachedConfigInfos.clear();
-      await this.update(true);
-    } catch (error: any) {
-      toast(I18nService.t("config.toast.delete_failed") + error.message);
     }
   }
 
