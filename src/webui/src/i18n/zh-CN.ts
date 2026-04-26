@@ -191,7 +191,6 @@ const zhCN: Record<string, string> = {
   "settings.language.auto": "跟随系统 (Auto)",
   "settings.language.zh": "简体中文",
   "settings.language.en": "English",
-  "settings.language.ur": "乌尔都语 (Urdu)",
   "settings.about": "关于",
   "settings.version": "当前版本",
   "settings.author": "作者",

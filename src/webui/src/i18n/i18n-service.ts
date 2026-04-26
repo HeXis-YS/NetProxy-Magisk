@@ -1,12 +1,11 @@
 import zhCN from "./zh-CN.js";
 import enUS from "./en-US.js";
-import urPK from "./ur-PK.js";
 
 /** Language dictionary type - maps translation keys to translated strings */
 export type LanguageDictionary = Record<string, string>;
 
 /** Supported language codes */
-export type SupportedLanguage = "zh-CN" | "en-US" | "ur-PK";
+export type SupportedLanguage = "zh-CN" | "en-US";
 
 /** All available language resources */
 export type LanguageResources = Record<SupportedLanguage, LanguageDictionary>;
@@ -27,7 +26,6 @@ export class I18nService {
   static resources: LanguageResources = {
     "zh-CN": zhCN as LanguageDictionary,
     "en-US": enUS as LanguageDictionary,
-    "ur-PK": urPK as LanguageDictionary,
   };
 
   // Initialize
@@ -80,12 +78,7 @@ export class I18nService {
 
   // Apply translation to all [data-i18n] elements
   static applyLanguage(): void {
-    // Set directionality
-    if (this.currentLang === "ur-PK") {
-      document.documentElement.dir = "rtl";
-    } else {
-      document.documentElement.dir = "ltr";
-    }
+    document.documentElement.dir = "ltr";
 
     const selectors = [
       "[data-i18n]",

@@ -195,7 +195,6 @@ const enUS: Record<string, string> = {
   "settings.language.auto": "Auto",
   "settings.language.zh": "简体中文",
   "settings.language.en": "English",
-  "settings.language.ur": "Urdu",
   "settings.about": "About",
   "settings.version": "Version",
   "settings.author": "Author",
