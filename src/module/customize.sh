@@ -240,47 +240,6 @@ set_permissions() {
   return 0
 }
 
-# 询问用户是否安装配套应用
-ask_install_app() {
-  ui_print ""
-  ui_print "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  ui_print "  是否安装 NetProxy 配套应用？"
-  ui_print "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  ui_print ""
-  ui_print "  [音量+] 安装 (打开 Google Play)"
-  ui_print "  [音量-] 跳过"
-  ui_print ""
-
-  local timeout=10
-  local choice=""
-
-  while [ $timeout -gt 0 ]; do
-    # 读取音量键
-    local key=$(getevent -lqc 1 2> /dev/null | grep -E "KEY_VOLUME(UP|DOWN)" | head -1)
-
-    if echo "$key" | grep -q "VOLUMEUP"; then
-      choice="install"
-      break
-    elif echo "$key" | grep -q "VOLUMEDOWN"; then
-      choice="skip"
-      break
-    fi
-
-    sleep 1
-    timeout=$((timeout - 1))
-  done
-
-  if [ "$choice" = "install" ]; then
-    print_step "正在打开 Google Play..."
-    am start -a android.intent.action.VIEW -d "https://play.google.com/store/apps/details?id=com.fanjv.netproxy" > /dev/null 2>&1
-    print_ok "已打开 Google Play"
-  else
-    print_step "已跳过安装"
-  fi
-
-  return 0
-}
-
 # 清理临时文件
 cleanup() {
   rm -rf "$BACKUP_DIR" 2> /dev/null
@@ -308,9 +267,6 @@ if backup_config \
   cleanup
 
   print_title "安装完成，请重启设备"
-
-  # 询问是否安装配套应用
-  ask_install_app
 else
   cleanup
   print_title "安装失败"
