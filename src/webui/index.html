@@ -446,17 +446,9 @@
                       >添加</mdui-button
                     >
                     <mdui-menu>
-                      <mdui-menu-item id="import-node-link">
-                        <mdui-icon slot="icon" name="link"></mdui-icon>
-                        <span data-i18n="config.add_node">添加节点</span>
-                      </mdui-menu-item>
                       <mdui-menu-item id="import-full-config">
                         <mdui-icon slot="icon" name="description"></mdui-icon>
                         <span data-i18n="config.add_outbound">添加出站</span>
-                      </mdui-menu-item>
-                      <mdui-menu-item id="import-subscription">
-                        <mdui-icon slot="icon" name="rss_feed"></mdui-icon>
-                        <span data-i18n="config.add_sub">添加订阅</span>
                       </mdui-menu-item>
                     </mdui-menu>
                   </mdui-dropdown>
@@ -1758,76 +1750,6 @@
           >确定</mdui-button
         >
       </div>
-    </mdui-dialog>
-
-    <!-- Node Link Import Dialog -->
-    <mdui-dialog
-      id="node-link-dialog"
-      headline="节点链接导入"
-      data-i18n-headline="config.import_link_title"
-    >
-      <mdui-text-field
-        label="节点链接"
-        placeholder="支持: vless://, vmess://, trojan://, ss://, socks://, http://, https://"
-        id="node-link-input"
-        rows="3"
-        data-i18n-label="config.link_label"
-        data-i18n-placeholder="config.link_placeholder"
-      ></mdui-text-field>
-      <mdui-button
-        slot="action"
-        variant="text"
-        id="node-link-cancel"
-        data-i18n="common.cancel"
-        >取消</mdui-button
-      >
-      <mdui-button
-        slot="action"
-        variant="filled"
-        id="node-link-save"
-        data-i18n="config.import"
-        >导入</mdui-button
-      >
-    </mdui-dialog>
-
-    <!-- Subscription Dialog -->
-    <mdui-dialog
-      id="subscription-dialog"
-      headline="添加订阅"
-      data-i18n-headline="config.add_sub_title"
-    >
-      <mdui-text-field
-        label="订阅名称"
-        placeholder="例如: 机场A"
-        id="subscription-name"
-        style="width: 100%; margin-bottom: 16px"
-        data-i18n-label="config.sub_name_label"
-        data-i18n-placeholder="config.sub_name_placeholder"
-      ></mdui-text-field>
-      <mdui-text-field
-        label="订阅地址"
-        placeholder="https://example.com/sub"
-        id="subscription-url"
-        style="width: 100%"
-        helper="支持 Base64 编码的订阅链接"
-        data-i18n-label="config.sub_url_label"
-        data-i18n-placeholder="config.sub_url_placeholder"
-        data-i18n-helper="config.sub_helper"
-      ></mdui-text-field>
-      <mdui-button
-        slot="action"
-        variant="text"
-        id="subscription-cancel"
-        data-i18n="common.cancel"
-        >取消</mdui-button
-      >
-      <mdui-button
-        slot="action"
-        variant="filled"
-        id="subscription-save"
-        data-i18n="common.add"
-        >添加</mdui-button
-      >
     </mdui-dialog>
 
     <!-- Config Editor Dialog -->

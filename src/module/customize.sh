@@ -27,7 +27,6 @@ readonly PRESERVE_CONFIGS="
 # 需要设置可执行权限的文件
 readonly EXECUTABLE_FILES="
     bin/xray
-    bin/proxylink
     action.sh
     scripts/cli
     scripts/core/service.sh

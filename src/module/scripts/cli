@@ -314,18 +314,7 @@ cmd_config() {
             ;;
         
         add)
-            local node_link="${1:-}"
-            if [ -z "$node_link" ]; then
-                error "请提供节点链接"
-            fi
-            
-            info "正在解析节点链接..."
-            chmod +x "$MODDIR/bin/proxylink"
-            if "$MODDIR/bin/proxylink" -parse "$node_link" -insecure -format xray -dir "$OUTBOUNDS_DIR" -auto; then
-                info "节点添加成功"
-            else
-                error "节点添加失败"
-            fi
+            error "节点链接导入已移除，请手动添加 Xray 出站 JSON 配置"
             ;;
         
         remove)

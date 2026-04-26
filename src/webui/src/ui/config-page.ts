@@ -429,14 +429,6 @@ export class ConfigPageManager {
 
       // 订阅专用操作
       if (group.type === "subscription") {
-        const updateItem = document.createElement("mdui-menu-item");
-        updateItem.innerHTML = `<mdui-icon slot="icon" name="refresh"></mdui-icon>${I18nService.t("config.menu.update_sub")}`;
-        updateItem.addEventListener("click", () => {
-          dropdown.open = false;
-          this.updateSubscription(group.dirName, group.name);
-        });
-        menu.appendChild(updateItem);
-
         const deleteItem = document.createElement("mdui-menu-item");
         deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("config.menu.delete_sub")}`;
         deleteItem.addEventListener("click", () => {
@@ -925,25 +917,6 @@ export class ConfigPageManager {
 
   // ===================== 订阅管理 =====================
 
-  async updateSubscription(dirName, displayName) {
-    toast(I18nService.t("config.toast.updating_sub"));
-
-    // 使用 setTimeout 让浏览器先渲染 UI
-    setTimeout(async () => {
-      try {
-        // subscription.sh 期望传入的是订阅名称（不带 sub_ 前缀）
-        await ConfigService.updateSubscription(displayName);
-        toast(I18nService.t("config.toast.sub_updated"));
-        // 清除该分组的缓存，强制重新加载
-        this._cachedConfigInfos.delete(displayName);
-        this.update();
-      } catch (error) {
-        toast(I18nService.t("config.toast.update_failed") + error.message);
-        this.update();
-      }
-    }, 50);
-  }
-
   async deleteSubscription(dirName, displayName) {
     try {
       const confirmed = await this.ui.confirm(
@@ -961,70 +934,6 @@ export class ConfigPageManager {
     } catch (error: any) {
       toast(I18nService.t("config.toast.delete_failed") + error.message);
     }
-  }
-
-  async addSubscription(): Promise<void> {
-    const dialog = document.getElementById("subscription-dialog") as any;
-    const nameInput = document.getElementById(
-      "subscription-name",
-    ) as HTMLInputElement | null;
-    const urlInput = document.getElementById(
-      "subscription-url",
-    ) as HTMLInputElement | null;
-
-    if (nameInput) nameInput.value = "";
-    if (urlInput) urlInput.value = "";
-    if (dialog) dialog.open = true;
-  }
-
-  async saveSubscription(): Promise<void> {
-    const nameInput = document.getElementById(
-      "subscription-name",
-    ) as HTMLInputElement | null;
-    const urlInput = document.getElementById(
-      "subscription-url",
-    ) as HTMLInputElement | null;
-    const saveBtn = document.getElementById("subscription-save");
-    const cancelBtn = document.getElementById("subscription-cancel");
-    const dialog = document.getElementById("subscription-dialog") as any;
-
-    if (!nameInput || !urlInput) return;
-
-    const name = nameInput.value.trim();
-    const url = urlInput.value.trim();
-
-    if (!name) {
-      toast(I18nService.t("config.toast.enter_sub_name"));
-      return;
-    }
-
-    if (!url) {
-      toast(I18nService.t("config.toast.enter_sub_url"));
-      return;
-    }
-
-    // 关闭对话框
-    if (dialog) dialog.open = false;
-
-    // 清空输入
-    nameInput.value = "";
-    urlInput.value = "";
-
-    toast(I18nService.t("config.toast.downloading_sub"));
-
-    // 使用 setTimeout 让浏览器先渲染 UI，再执行阻塞操作
-    setTimeout(async () => {
-      try {
-        await ConfigService.addSubscription(name, url);
-        toast(I18nService.t("config.toast.sub_added"));
-        // 清除缓存，强制刷新分组列表
-        this._cachedGroups = null;
-        this._cachedConfigInfos.clear();
-        await this.update(true);
-      } catch (error: any) {
-        toast(I18nService.t("config.toast.add_failed") + error.message);
-      }
-    }, 50);
   }
 
   // ===================== 原有方法 =====================
@@ -1105,59 +1014,4 @@ export class ConfigPageManager {
     }
   }
 
-  async importNodeLink(): Promise<void> {
-    const input = document.getElementById(
-      "node-link-input",
-    ) as HTMLInputElement | null;
-    if (!input) return;
-
-    const nodeLink = input.value.trim();
-
-    if (!nodeLink) {
-      toast(I18nService.t("config.toast.enter_link"));
-      return;
-    }
-
-    const supportedProtocols = [
-      "vless://",
-      "vmess://",
-      "trojan://",
-      "ss://",
-      "socks://",
-      "http://",
-      "https://",
-      "hysteria2://",
-      "hy2://",
-    ];
-    const isValid = supportedProtocols.some((protocol) =>
-      nodeLink.startsWith(protocol),
-    );
-
-    if (!isValid) {
-      toast(I18nService.t("config.toast.unsupported_link"));
-      return;
-    }
-
-    try {
-      const result = await ConfigService.importFromNodeLink(nodeLink);
-
-      if (result.success) {
-        toast(I18nService.t("config.toast.import_success"));
-        const dialog = document.getElementById("node-link-dialog") as any;
-        if (dialog) dialog.open = false;
-        input.value = "";
-        // 强制刷新配置列表
-        this._cachedGroups = null;
-        this._cachedConfigInfos.clear();
-        await this.update(true);
-      } else {
-        toast(
-          I18nService.t("config.toast.import_failed") +
-            (result.error || I18nService.t("common.unknown")),
-        );
-      }
-    } catch (error: any) {
-      toast(I18nService.t("config.toast.import_failed") + error.message);
-    }
-  }
 }

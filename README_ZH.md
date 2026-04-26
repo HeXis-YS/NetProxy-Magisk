@@ -154,7 +154,6 @@ vless://... 或 vmess://... 或 trojan://... 等
 | [v2rayNG](https://github.com/2dust/v2rayNG) | 节点链接解析逻辑参考 |
 | [AndroidTProxyShell](https://github.com/CHIZI-0618/AndroidTProxyShell) | Android TProxy 透明代理实现参考 |
 | [KsuWebUIStandalone](https://github.com/KOWX712/KsuWebUIStandalone) | WebUI 独立运行方案参考 |
-| [Proxylink](https://github.com/Fanju6/Proxylink) | 代理链接解析器，用于订阅解析和配置生成 |
 
 ---
 

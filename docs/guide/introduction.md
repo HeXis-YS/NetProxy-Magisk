@@ -22,7 +22,6 @@ NetProxy 是一个基于 Xray-core 的 Android 透明代理模块，支持 Magis
 /data/adb/modules/netproxy/
 ├── bin/                     # 二进制文件
 │   ├── xray                 # Xray 核心
-│   ├── proxylink            # 节点链接解析工具
 │   ├── geoip.dat            # GeoIP 数据库
 │   └── geosite.dat          # GeoSite 数据库
 ├── config/                  # 配置文件

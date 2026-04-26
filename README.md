@@ -157,7 +157,6 @@ This project is built upon the following excellent open-source projects:
 | [v2rayNG](https://github.com/2dust/v2rayNG) | Node link parsing logic reference |
 | [AndroidTProxyShell](https://github.com/CHIZI-0618/AndroidTProxyShell) | Android TProxy implementation reference |
 | [KsuWebUIStandalone](https://github.com/KOWX712/KsuWebUIStandalone) | WebUI standalone solution reference |
-| [Proxylink](https://github.com/Fanju6/Proxylink) | Proxy link parser for subscription parsing and config generation |
 
 ---
 

@@ -172,19 +172,6 @@ EOF
     }
   }
 
-  static async importFromNodeLink(nodeLink: string): Promise<OperationResult> {
-    try {
-      const escapedLink = nodeLink.replace(/'/g, "'\\''");
-      const result = await KSU.exec(
-        `cd '${KSU.MODULE_PATH}/config/xray/outbounds/default' && chmod +x '${KSU.MODULE_PATH}/bin/proxylink' && '${KSU.MODULE_PATH}/bin/proxylink' -parse '${escapedLink}' -insecure -format xray -auto`,
-      );
-      return { success: true, output: result };
-    } catch (error: any) {
-      console.error("Import from node link error:", error);
-      return { success: false, error: error.message };
-    }
-  }
-
   // ==================== 订阅管理 ====================
 
   static async getSubscriptions(): Promise<Subscription[]> {
@@ -219,31 +206,6 @@ EOF
     }
   }
 
-  static async addSubscription(
-    name: string,
-    url: string,
-  ): Promise<OperationResult> {
-    try {
-      await KSU.exec(
-        `sh ${KSU.MODULE_PATH}/scripts/config/subscription.sh add "${name}" "${url}"`,
-      );
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
-  }
-
-  static async updateSubscription(name: string): Promise<OperationResult> {
-    const statusFile = `${KSU.MODULE_PATH}/config/.sub_status`;
-    await KSU.exec(`rm -f ${statusFile}`);
-    // Fire-and-forget: spawn background script
-    KSU.spawn("sh", [
-      "-c",
-      `sh ${KSU.MODULE_PATH}/scripts/config/subscription.sh update "${name}" && echo success > ${statusFile} || echo fail > ${statusFile}`,
-    ]);
-    return await this.waitForSubscriptionComplete(statusFile, 60000);
-  }
-
   static async removeSubscription(name: string): Promise<OperationResult> {
     try {
       await KSU.exec(
@@ -255,31 +217,4 @@ EOF
     }
   }
 
-  static async waitForSubscriptionComplete(
-    statusFile: string,
-    timeout: number,
-  ): Promise<OperationResult> {
-    const startTime = Date.now();
-    const pollInterval = 500;
-
-    while (Date.now() - startTime < timeout) {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
-      try {
-        const status = await KSU.exec(
-          `cat ${statusFile} 2>/dev/null || echo ""`,
-        );
-
-        if (status.trim() === "success") {
-          await KSU.exec(`rm -f ${statusFile}`);
-          return { success: true };
-        } else if (status.trim() === "fail") {
-          await KSU.exec(`rm -f ${statusFile}`);
-          throw new Error("订阅操作失败");
-        }
-      } catch (e) {
-        // Continue polling
-      }
-    }
-    throw new Error("操作超时");
-  }
 }

@@ -256,49 +256,10 @@ export class UI {
     const importMenu = document.getElementById("import-menu") as any;
 
     document
-      .getElementById("import-node-link")
-      ?.addEventListener("click", () => {
-        importMenu.open = false;
-        (document.getElementById("node-link-dialog") as any).open = true;
-      });
-
-    document
       .getElementById("import-full-config")
       ?.addEventListener("click", () => {
         importMenu.open = false;
         this.showConfigDialog();
-      });
-
-    document
-      .getElementById("node-link-cancel")
-      ?.addEventListener("click", () => {
-        (document.getElementById("node-link-dialog") as any).open = false;
-      });
-
-    document
-      .getElementById("node-link-save")
-      ?.addEventListener("click", async () => {
-        await this.configPage.importNodeLink();
-      });
-
-    // 订阅对话框事件
-    document
-      .getElementById("import-subscription")
-      ?.addEventListener("click", () => {
-        importMenu.open = false;
-        (document.getElementById("subscription-dialog") as any).open = true;
-      });
-
-    document
-      .getElementById("subscription-cancel")
-      ?.addEventListener("click", () => {
-        (document.getElementById("subscription-dialog") as any).open = false;
-      });
-
-    document
-      .getElementById("subscription-save")
-      ?.addEventListener("click", async () => {
-        await this.configPage.saveSubscription();
       });
 
     document
