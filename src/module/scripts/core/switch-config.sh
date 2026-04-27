@@ -4,19 +4,17 @@ set -u
 
 readonly MODDIR="$(cd "$(dirname "$0")/../.." && pwd)"
 readonly LOG_FILE="$MODDIR/logs/service.log"
-readonly STATUS_FILE="$MODDIR/config/status.conf"
 readonly XRAY_BIN="$MODDIR/bin/xray"
-readonly API_SERVER="127.0.0.1:8080"
 
 # 导入工具库
 . "$MODDIR/scripts/utils/log.sh"
 
 #######################################
-# 热切换配置
+# 切换完整 Xray 配置
 # Arguments:
 #   $1 - 新配置文件路径
 #######################################
-hot_switch() {
+switch_config() {
   local config_file="$1"
 
   if [ ! -f "$config_file" ]; then
@@ -24,27 +22,23 @@ hot_switch() {
     exit 1
   fi
 
-  log "INFO" "========== 开始热切换配置 =========="
+  log "INFO" "========== 开始切换 Xray 配置 =========="
   log "INFO" "新配置: $config_file"
 
-  # 1. 删除现有 proxy 出站
-  log "INFO" "删除 proxy 出站..."
-  "$XRAY_BIN" api rmo --server="$API_SERVER" "proxy" 2> /dev/null || true
-
-  # 2. 添加新出站
-  log "INFO" "添加新出站..."
-  if "$XRAY_BIN" api ado --server="$API_SERVER" "$config_file"; then
-    log "INFO" "新出站添加成功"
-  else
-    log "ERROR" "新出站添加失败"
+  if ! "$XRAY_BIN" run -test -config "$config_file" > /dev/null 2>&1; then
+    log "ERROR" "Xray 配置校验失败: $config_file"
     exit 1
   fi
 
-  # 3. 更新 module.conf 中的 CURRENT_CONFIG
   sed -i "s|^CURRENT_CONFIG=.*|CURRENT_CONFIG=\"$config_file\"|" "$MODDIR/config/module.conf"
 
   log "INFO" "配置文件已更新"
-  log "INFO" "========== 热切换完成 =========="
+  if pidof -s "$XRAY_BIN" > /dev/null 2>&1; then
+    log "INFO" "Xray 正在运行，重启服务以应用完整配置"
+    sh "$MODDIR/scripts/core/service.sh" restart
+  fi
+
+  log "INFO" "========== 配置切换完成 =========="
 }
 
 # 主流程
@@ -54,4 +48,4 @@ if [ -z "${1:-}" ]; then
   exit 1
 fi
 
-hot_switch "$1"
+switch_config "$1"

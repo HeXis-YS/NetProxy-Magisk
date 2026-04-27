@@ -19,9 +19,7 @@ XRAY_WAS_RUNNING=false
 readonly PRESERVE_CONFIGS="
     module.conf
     tproxy/
-    xray/outbounds
-    xray/confdir/02_dns.json
-    xray/confdir/routing
+    xray/configs
 "
 
 # 需要设置可执行权限的文件
@@ -31,7 +29,6 @@ readonly EXECUTABLE_FILES="
     scripts/cli
     scripts/core/service.sh
     scripts/core/switch-config.sh
-    scripts/core/switch-mode.sh
     scripts/network/tproxy.sh
     scripts/utils/update-xray.sh
     scripts/utils/oneplus_a16_fix.sh

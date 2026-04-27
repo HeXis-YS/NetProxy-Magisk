@@ -59,7 +59,6 @@ export class UI {
     this.appPage.init();
     this.setupAppSelector();
     this.settingsPage.init();
-    this.statusPage.setupModeButtons();
 
     // 初始化页面状态 (包括按钮可见性)
     this.switchPage(this.currentPage);
@@ -253,6 +252,20 @@ export class UI {
   }
 
   setupDialogs(): void {
+    document.getElementById("add-config-btn")?.addEventListener("click", () => {
+      this.configPage.showDialog();
+    });
+
+    document
+      .getElementById("config-cancel-btn")
+      ?.addEventListener("click", () => {
+        (document.getElementById("config-dialog") as any).open = false;
+      });
+
+    document.getElementById("config-save-btn")?.addEventListener("click", () => {
+      this.configPage.saveConfig();
+    });
+
     document.getElementById("uid-cancel-btn")?.addEventListener("click", () => {
       (document.getElementById("uid-dialog") as any).open = false;
     });

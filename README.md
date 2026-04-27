@@ -66,21 +66,7 @@
 ├── bin/                      # Xray binary
 ├── config/
 │   ├── xray/
-│   │   ├── confdir/          # Xray core configuration
-│   │   │   ├── routing/      # Routing & Shunting configuration
-│   │   │   │   ├── internal/ # Internal system configuration
-│   │   │   │   ├── direct.json
-│   │   │   │   ├── global.json
-│   │   │   │   ├── rule.json
-│   │   │   │   └── routing_rules.json
-│   │   │   ├── 00_log.json
-│   │   │   ├── 01_api.json
-│   │   │   ├── 02_dns.json
-│   │   │   ├── 03_inbounds.json
-│   │   │   ├── 04_outbounds.json
-│   │   │   └── 05_policy.json
-│   │   └── outbounds/        # Outbound node group directories
-│   │       └── default/      # Default node group
+│   │   └── configs/          # Complete Xray JSON configs
 │   ├── tproxy/
 │   │   └── tproxy.conf       # Transparent proxy configuration
 │   └── module.conf           # Module settings (autostart, etc.)
@@ -96,17 +82,21 @@
 
 ### Manual Configuration
 
-Create a JSON config file in the `outbounds/default` directory:
+Create a complete Xray JSON config file in the `xray/configs` directory:
 
 ```json
 {
+  "inbounds": [],
   "outbounds": [
     {
       "tag": "proxy",
       "protocol": "vless",
       "settings": { ... }
     }
-  ]
+  ],
+  "routing": {
+    "rules": []
+  }
 }
 ```
 

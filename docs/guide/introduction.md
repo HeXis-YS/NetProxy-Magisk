@@ -26,11 +26,9 @@ NetProxy 是一个基于 Xray-core 的 Android 透明代理模块，支持 Magis
 │   └── geosite.dat          # GeoSite 数据库
 ├── config/                  # 配置文件
 │   ├── module.conf          # 模块主配置
-│   ├── tproxy.conf          # TProxy 配置
-│   ├── routing_rules.json   # 路由规则
+│   ├── tproxy/              # TProxy 配置
 │   └── xray/                # Xray 配置目录
-│       ├── confdir/         # 模块化配置
-│       └── outbounds/       # 节点配置
+│       └── configs/         # 完整 Xray JSON 配置
 ├── scripts/                 # 脚本文件
 │   ├── cli                  # 命令行工具
 │   ├── core/                # 核心服务脚本

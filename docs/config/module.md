@@ -7,11 +7,9 @@
 ```
 config/
 ├── module.conf          # 模块主配置
-├── tproxy.conf          # TProxy 透明代理配置
-├── routing_rules.json   # 路由规则配置
+├── tproxy/              # TProxy 透明代理配置
 └── xray/                # Xray 配置目录
-    ├── confdir/         # Xray 模块化配置
-    └── outbounds/       # 节点配置
+    └── configs/         # 完整 Xray JSON 配置
 ```
 
 ---
@@ -26,22 +24,18 @@ config/
 # 开机自动启动服务 (1=启用, 0=禁用)
 AUTO_START=1
 
-# 出站模式 (rule=规则分流, global=全局代理, direct=全局直连)
-OUTBOUND_MODE=rule
-
 # OnePlus Android 16 修复 (1=启用, 0=禁用)
 ONEPLUS_A16_FIX=0
 
 # 当前使用的配置文件路径
-CURRENT_CONFIG="/data/adb/modules/netproxy/config/xray/outbounds/default.json"
+CURRENT_CONFIG="/data/adb/modules/netproxy/config/xray/configs/default.json"
 ```
 
 | 配置项 | 说明 | 可选值 |
 |--------|------|--------|
 | `AUTO_START` | 开机自启 | `1` / `0` |
-| `OUTBOUND_MODE` | 出站模式 | `rule` / `global` / `direct` |
 | `ONEPLUS_A16_FIX` | 一加 A16 修复 | `1` / `0` |
-| `CURRENT_CONFIG` | 当前节点配置路径 | 文件路径 |
+| `CURRENT_CONFIG` | 当前完整 Xray 配置路径 | 文件路径 |
 
 ---
 

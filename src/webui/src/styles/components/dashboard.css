@@ -27,11 +27,6 @@
   grid-column: 1 / -1;
 }
 
-.mode-card {
-  grid-column: 1;
-  grid-row: 2 / 4;
-}
-
 .dashboard-grid > .common-card:nth-child(3) {
   grid-column: 2;
   grid-row: 2;
@@ -177,61 +172,6 @@
   right: 12px;
   font-size: 11px;
   color: var(--monet-on-surface-variant, var(--mdui-color-on-surface-variant));
-}
-
-/* ==================== 出站模式卡片 ==================== */
-
-.mode-card .card-content {
-  padding: 4px 8px 8px 8px;
-  justify-content: flex-start;
-}
-
-.mode-options {
-  display: flex;
-  flex-direction: column;
-}
-
-.mode-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.mode-option:hover {
-  background: var(--monet-surface-container-high, rgba(0, 0, 0, 0.04));
-}
-
-.mode-option .mode-radio {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--monet-outline, var(--mdui-color-outline));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.mode-option.active .mode-radio {
-  border-color: var(--monet-primary, var(--mdui-color-primary));
-}
-
-.mode-option.active .mode-radio::after {
-  content: "";
-  width: 9px;
-  height: 9px;
-  background: var(--monet-primary, var(--mdui-color-primary));
-  border-radius: 50%;
-}
-
-.mode-option .mode-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--monet-on-surface, var(--mdui-color-on-surface));
 }
 
 /* ==================== 流量统计卡片 ==================== */

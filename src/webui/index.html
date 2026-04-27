@@ -205,42 +205,6 @@
               </div>
             </div>
 
-            <!-- 左列: 出站模式 (2格高) -->
-            <div
-              class="common-card half-width height-2 mode-card"
-              id="card-mode"
-            >
-              <div class="card-delete-btn">
-                <mdui-icon name="close"></mdui-icon>
-              </div>
-              <div class="card-header">
-                <mdui-icon name="call_split" class="card-icon"></mdui-icon>
-                <span class="card-title" data-i18n="status.outbound_mode"
-                  >出站模式</span
-                >
-              </div>
-              <div class="card-content">
-                <div class="mode-options">
-                  <div
-                    class="mode-option active"
-                    id="mode-rule"
-                    data-mode="rule"
-                  >
-                    <div class="mode-radio"></div>
-                    <span class="mode-label">规则</span>
-                  </div>
-                  <div class="mode-option" id="mode-global" data-mode="global">
-                    <div class="mode-radio"></div>
-                    <span class="mode-label">全局</span>
-                  </div>
-                  <div class="mode-option" id="mode-direct" data-mode="direct">
-                    <div class="mode-radio"></div>
-                    <span class="mode-label">直连</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- 右列: 网络检测 (1格高) -->
             <div class="common-card half-width height-1" id="card-external-ip">
               <div class="card-delete-btn">
@@ -437,6 +401,10 @@
                   >
                     节点管理
                   </h2>
+                  <mdui-button-icon
+                    icon="add"
+                    id="add-config-btn"
+                  ></mdui-button-icon>
                 </div>
 
                 <!-- 分组横向标签页 (动态生成) -->
@@ -463,6 +431,28 @@
             </mdui-card>
           </div>
         </div>
+
+        <mdui-dialog id="config-dialog" close-on-overlay-click>
+          <div slot="headline" id="config-dialog-title">编辑配置</div>
+          <div slot="description">
+            <mdui-text-field
+              id="config-filename"
+              label="文件名"
+              placeholder="default.json"
+              style="margin-bottom: 12px"
+            ></mdui-text-field>
+            <mdui-text-field
+              id="config-content"
+              label="Xray JSON"
+              rows="18"
+              autosize
+            ></mdui-text-field>
+          </div>
+          <mdui-button slot="action" variant="text" id="config-cancel-btn"
+            >取消</mdui-button
+          >
+          <mdui-button slot="action" id="config-save-btn">保存</mdui-button>
+        </mdui-dialog>
 
         <!-- Proxy Settings Page -->
         <div id="uid-page" class="page">

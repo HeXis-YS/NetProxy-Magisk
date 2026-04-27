@@ -35,8 +35,8 @@ set -u
 MODDIR="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPTS_DIR="$MODDIR/scripts"
 CONFIG_DIR="$MODDIR/config"
-OUTBOUNDS_DIR="$CONFIG_DIR/xray/outbounds"
-STATUS_FILE="$CONFIG_DIR/status.conf"
+CONFIGS_DIR="$CONFIG_DIR/xray/configs"
+MODULE_CONF="$CONFIG_DIR/module.conf"
 PROXY_CONF="$CONFIG_DIR/proxy.conf"
 APPS_LIST="$CONFIG_DIR/proxy_apps.list"
 XRAY_BIN="$MODDIR/bin/xray"
@@ -103,8 +103,8 @@ cmd_status() {
     fi
     
     # 当前配置
-    if [ -f "$STATUS_FILE" ]; then
-        local config=$(grep '^config=' "$STATUS_FILE" | cut -d'"' -f2)
+    if [ -f "$MODULE_CONF" ]; then
+        local config=$(grep '^CURRENT_CONFIG=' "$MODULE_CONF" | cut -d'"' -f2)
         if [ -n "$config" ]; then
             echo "当前配置: $(basename "$config")"
         fi
@@ -202,15 +202,15 @@ cmd_config() {
             
             # 获取当前配置
             local current=""
-            if [ -f "$STATUS_FILE" ]; then
-                current=$(grep '^config=' "$STATUS_FILE" | cut -d'"' -f2)
+            if [ -f "$MODULE_CONF" ]; then
+                current=$(grep '^CURRENT_CONFIG=' "$MODULE_CONF" | cut -d'"' -f2)
                 current=$(basename "$current" 2>/dev/null || echo "")
             fi
             
-            # 列出默认分组
+            # 列出完整 Xray 配置
             echo ""
-            echo "[默认分组]"
-            for f in "$OUTBOUNDS_DIR"/*.json; do
+            echo "[Xray 配置]"
+            for f in "$CONFIGS_DIR"/*.json; do
                 [ -f "$f" ] || continue
                 local name=$(basename "$f")
                 if [ "$name" = "$current" ]; then
@@ -231,11 +231,10 @@ cmd_config() {
             # 查找配置文件
             local config_path=""
             
-            # 先在默认目录查找
-            if [ -f "$OUTBOUNDS_DIR/$config_name" ]; then
-                config_path="$OUTBOUNDS_DIR/$config_name"
-            elif [ -f "$OUTBOUNDS_DIR/${config_name}.json" ]; then
-                config_path="$OUTBOUNDS_DIR/${config_name}.json"
+            if [ -f "$CONFIGS_DIR/$config_name" ]; then
+                config_path="$CONFIGS_DIR/$config_name"
+            elif [ -f "$CONFIGS_DIR/${config_name}.json" ]; then
+                config_path="$CONFIGS_DIR/${config_name}.json"
             fi
             
             if [ -z "$config_path" ]; then
@@ -245,21 +244,18 @@ cmd_config() {
             info "切换配置: $(basename "$config_path")"
             
             if is_running; then
-                # 热切换
-                info "服务运行中，执行热切换..."
+                info "服务运行中，重启应用完整配置..."
                 sh "$SCRIPTS_DIR/core/switch-config.sh" "$config_path"
-                info "热切换完成"
+                info "配置切换完成"
             else
-                # 更新 status.conf
-                echo "status=\"stopped\"" > "$STATUS_FILE"
-                echo "config=\"$config_path\"" >> "$STATUS_FILE"
+                sed -i "s|^CURRENT_CONFIG=.*|CURRENT_CONFIG=\"$config_path\"|" "$MODULE_CONF"
                 info "配置已更新，下次启动时生效"
             fi
             ;;
         
         current)
-            if [ -f "$STATUS_FILE" ]; then
-                local config=$(grep '^config=' "$STATUS_FILE" | cut -d'"' -f2)
+            if [ -f "$MODULE_CONF" ]; then
+                local config=$(grep '^CURRENT_CONFIG=' "$MODULE_CONF" | cut -d'"' -f2)
                 if [ -n "$config" ]; then
                     echo "当前配置: $(basename "$config")"
                     echo "完整路径: $config"
@@ -267,7 +263,7 @@ cmd_config() {
                     echo "未设置配置"
                 fi
             else
-                echo "状态文件不存在"
+                echo "模块配置文件不存在"
             fi
             ;;
         
@@ -284,11 +280,10 @@ cmd_config() {
             # 查找配置文件
             local config_path=""
             
-            # 先在默认目录查找
-            if [ -f "$OUTBOUNDS_DIR/$config_name" ]; then
-                config_path="$OUTBOUNDS_DIR/$config_name"
-            elif [ -f "$OUTBOUNDS_DIR/${config_name}.json" ]; then
-                config_path="$OUTBOUNDS_DIR/${config_name}.json"
+            if [ -f "$CONFIGS_DIR/$config_name" ]; then
+                config_path="$CONFIGS_DIR/$config_name"
+            elif [ -f "$CONFIGS_DIR/${config_name}.json" ]; then
+                config_path="$CONFIGS_DIR/${config_name}.json"
             fi
             
             if [ -z "$config_path" ]; then
@@ -296,8 +291,8 @@ cmd_config() {
             fi
             
             # 检查是否是当前使用的配置
-            if [ -f "$STATUS_FILE" ]; then
-                local current=$(grep '^config=' "$STATUS_FILE" | cut -d'"' -f2)
+            if [ -f "$MODULE_CONF" ]; then
+                local current=$(grep '^CURRENT_CONFIG=' "$MODULE_CONF" | cut -d'"' -f2)
                 if [ "$config_path" = "$current" ]; then
                     error "无法删除当前正在使用的配置"
                 fi
@@ -316,11 +311,10 @@ cmd_config() {
             # 查找配置文件
             local config_path=""
             
-            # 先在默认目录查找
-            if [ -f "$OUTBOUNDS_DIR/$config_name" ]; then
-                config_path="$OUTBOUNDS_DIR/$config_name"
-            elif [ -f "$OUTBOUNDS_DIR/${config_name}.json" ]; then
-                config_path="$OUTBOUNDS_DIR/${config_name}.json"
+            if [ -f "$CONFIGS_DIR/$config_name" ]; then
+                config_path="$CONFIGS_DIR/$config_name"
+            elif [ -f "$CONFIGS_DIR/${config_name}.json" ]; then
+                config_path="$CONFIGS_DIR/${config_name}.json"
             fi
             
             if [ -z "$config_path" ]; then

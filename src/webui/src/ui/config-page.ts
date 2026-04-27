@@ -34,6 +34,7 @@ export class ConfigPageManager {
   _latencyCache: Map<string, LatencyCache>;
   _loadingChunks: Set<string>;
   _selectedTab: string | null;
+  editingFilename: string | null;
   observer: IntersectionObserver;
   _tabChangeHandler: ((e: Event) => Promise<void>) | null;
 
@@ -47,6 +48,7 @@ export class ConfigPageManager {
     this._latencyCache = new Map();
     this._loadingChunks = new Set(); // 防止并发加载同一 chunk
     this._selectedTab = null; // 持久化当前选中的 tab
+    this.editingFilename = null;
     this._tabChangeHandler = null;
 
     // 懒加载观察器
@@ -632,15 +634,35 @@ export class ConfigPageManager {
 
     const menu = document.createElement("mdui-menu");
 
+    const editItem = document.createElement("mdui-menu-item");
+    editItem.innerHTML = `<mdui-icon slot="icon" name="edit"></mdui-icon>${I18nService.t("common.edit") || "Edit"}`;
+    editItem.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      dropdown.open = false;
+      await this.showDialog(filename);
+    });
+    menu.appendChild(editItem);
+
     // 测试
     const testItem = document.createElement("mdui-menu-item");
     testItem.innerHTML = `<mdui-icon slot="icon" name="speed"></mdui-icon>${I18nService.t("config.menu.test")}`;
     testItem.addEventListener("click", async (e) => {
       e.stopPropagation();
       dropdown.open = false;
-      await this.testConfig(displayName, info.address, item);
+      if (info?.address) {
+        await this.testConfig(displayName, info.address, item);
+      }
     });
     menu.appendChild(testItem);
+
+    const deleteItem = document.createElement("mdui-menu-item");
+    deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("common.delete") || "Delete"}`;
+    deleteItem.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      dropdown.open = false;
+      await this.deleteConfig(filename);
+    });
+    menu.appendChild(deleteItem);
 
     dropdown.appendChild(menu);
     item.appendChild(dropdown);
@@ -791,6 +813,92 @@ export class ConfigPageManager {
     } catch (error) {
       toast(I18nService.t("config.toast.switch_failed") + error.message);
     }
+  }
+
+  async showDialog(filename: string | null = null) {
+    this.editingFilename = filename;
+    const dialog = document.getElementById("config-dialog") as any;
+    const title = document.getElementById("config-dialog-title");
+    const filenameInput = document.getElementById("config-filename") as any;
+    const contentInput = document.getElementById("config-content") as any;
+
+    if (!dialog || !filenameInput || !contentInput) return;
+
+    if (filename) {
+      if (title) title.textContent = I18nService.t("common.edit") || "Edit";
+      filenameInput.value = filename;
+      filenameInput.disabled = true;
+      contentInput.value = await ConfigService.readConfig(filename);
+    } else {
+      if (title) title.textContent = I18nService.t("config.add_node");
+      filenameInput.value = "";
+      filenameInput.disabled = false;
+      contentInput.value = JSON.stringify(
+        {
+          log: { loglevel: "warning" },
+          inbounds: [],
+          outbounds: [],
+          routing: { rules: [] },
+        },
+        null,
+        2,
+      );
+    }
+
+    dialog.open = true;
+  }
+
+  async saveConfig() {
+    const dialog = document.getElementById("config-dialog") as any;
+    const saveBtn = document.getElementById("config-save-btn") as any;
+    const filenameInput = document.getElementById("config-filename") as any;
+    const contentInput = document.getElementById("config-content") as any;
+
+    if (!filenameInput || !contentInput) return;
+
+    const filename = filenameInput.value.trim();
+    const content = contentInput.value;
+    if (!filename) {
+      toast(I18nService.t("config.toast.filename_required"));
+      return;
+    }
+
+    try {
+      if (saveBtn) saveBtn.loading = true;
+      const result = await ConfigService.saveConfig(filename, content);
+      if (!result.success) {
+        toast(result.error || I18nService.t("config.toast.save_failed"));
+        return;
+      }
+      if (dialog) dialog.open = false;
+      this._cachedGroups = null;
+      this._cachedConfigInfos.clear();
+      await this.update(true);
+      toast(I18nService.t("config.toast.save_success"));
+    } finally {
+      if (saveBtn) saveBtn.loading = false;
+    }
+  }
+
+  async deleteConfig(filename: string) {
+    if (
+      this._cachedCurrentConfig &&
+      this._cachedCurrentConfig.endsWith(filename)
+    ) {
+      toast(I18nService.t("config.toast.delete_current_forbidden"));
+      return;
+    }
+
+    const result = await ConfigService.deleteConfig(filename);
+    if (!result.success) {
+      toast(result.error || I18nService.t("common.delete_failed"));
+      return;
+    }
+
+    this._cachedGroups = null;
+    this._cachedConfigInfos.clear();
+    await this.update(true);
+    toast(I18nService.t("config.toast.delete_success"));
   }
 
 }

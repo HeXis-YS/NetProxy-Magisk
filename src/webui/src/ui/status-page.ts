@@ -1,6 +1,5 @@
 import { StatusService } from "../services/status-service.js";
 import { I18nService } from "../i18n/i18n-service.js";
-import { toast } from "../utils/toast.js";
 import Sortable from "sortablejs";
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
@@ -306,9 +305,6 @@ export class StatusPageManager {
 
       // 更新 IP 和流量信息
       await this.updateIPAndTraffic();
-
-      // 更新出站模式 UI
-      await this.updateModeUI();
 
       // 更新系统状态 (CPU/Mem)
       const sysStatus = await StatusService.getSystemStatus();
@@ -676,90 +672,6 @@ export class StatusPageManager {
       fabRuntime.textContent = uptimeStr + "\u00A0\u00A0";
     }
   }
-
-  // 更新出站模式 UI
-  async updateModeUI(): Promise<void> {
-    try {
-      const currentMode = await StatusService.getOutboundMode();
-
-      // 更新按钮状态
-      const modeOptions = document.querySelectorAll(".mode-option");
-      modeOptions.forEach((option) => {
-        const mode = (option as HTMLElement).dataset.mode;
-        if (mode === currentMode) {
-          option.classList.add("active");
-        } else {
-          option.classList.remove("active");
-        }
-      });
-
-      // 直连模式下隐藏节点页面入口
-      const navConfig = document.getElementById("nav-config");
-      if (navConfig) {
-        navConfig.style.display = currentMode === "direct" ? "none" : "";
-      }
-    } catch (error) {
-      console.error("更新模式 UI 失败:", error);
-    }
-  }
-
-  // 设置模式按钮点击事件
-  setupModeButtons(): void {
-    const modeOptions = document.querySelectorAll(".mode-option");
-
-    modeOptions.forEach((option) => {
-      option.addEventListener("click", async () => {
-        const mode = (option as HTMLElement).dataset.mode!; // Non-null assertion for data set in HTML
-
-        // 避免重复点击
-        if (
-          option.classList.contains("active") ||
-          option.classList.contains("loading")
-        ) {
-          return;
-        }
-
-        // 显示加载状态
-        option.classList.add("loading");
-
-        // 立即更新 UI (乐观更新)
-        const navConfig = document.getElementById("nav-config");
-        if (navConfig) {
-          navConfig.style.display = mode === "direct" ? "none" : "";
-        }
-
-        // 记录当前激活的按钮用于回滚
-        const previousActive = document.querySelector(
-          ".mode-option.active",
-        ) as HTMLElement | null;
-
-        // 立即更新按钮状态
-        modeOptions.forEach((opt) => opt.classList.remove("active"));
-        option.classList.add("active");
-
-        try {
-          const success = await StatusService.setOutboundMode(mode);
-
-          if (!success) {
-            // 切换失败，恢复状态
-            modeOptions.forEach((opt) => opt.classList.remove("active"));
-            if (previousActive) previousActive.classList.add("active");
-            if (navConfig) {
-              navConfig.style.display =
-                previousActive?.dataset.mode === "direct" ? "none" : "";
-            }
-            toast(I18nService.t("status.mode_switch_failed") || "模式切换失败");
-          }
-        } catch (error: any) {
-          console.error("模式切换失败:", error);
-          toast(error.message || "模式切换失败");
-        } finally {
-          option.classList.remove("loading");
-        }
-      });
-    });
-  }
-
   /**
    * 更新网速图表颜色
    * 当主题色改变时调用此方法刷新图表颜色

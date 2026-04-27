@@ -9,8 +9,6 @@ readonly LOG_FILE="$MODDIR/logs/service.log"
 readonly XRAY_BIN="$MODDIR/bin/xray"
 readonly MODULE_CONF="$MODDIR/config/module.conf"
 readonly XRAY_LOG_FILE="$MODDIR/logs/xray.log"
-readonly CONFDIR="$MODDIR/config/xray/confdir"
-readonly OUTBOUNDS_DIR="$MODDIR/config/xray/outbounds"
 
 readonly KILL_TIMEOUT=5
 
@@ -55,36 +53,16 @@ do_start() {
   [ -f "$MODULE_CONF" ] || die "模块配置文件不存在: $MODULE_CONF"
   . "$MODULE_CONF"
 
-  local outbound_config="${CURRENT_CONFIG:-}"
-  outbound_config="${outbound_config//\"/}"
-  [ -n "$outbound_config" ] || die "无法解析出站配置路径"
+  local xray_config="${CURRENT_CONFIG:-}"
+  xray_config="${xray_config//\"/}"
+  [ -n "$xray_config" ] || die "无法解析 Xray 配置路径"
+  [ -f "$xray_config" ] || die "Xray 配置文件不存在: $xray_config"
 
-  local outbound_mode="${OUTBOUND_MODE:-rule}"
-  log "INFO" "当前出站模式: $outbound_mode"
-
-  # 确定路由配置
-  local routing_config="$CONFDIR/routing/rule.json"
-  if [ "$outbound_mode" = "global" ]; then
-    routing_config="$CONFDIR/routing/global.json"
-    log "INFO" "全局模式: 使用 global.json"
-  elif [ "$outbound_mode" = "direct" ]; then
-    routing_config="$CONFDIR/routing/direct.json"
-    log "INFO" "直连模式: 使用 direct.json"
-  fi
-
-  [ -f "$routing_config" ] || die "路由配置文件不存在: $routing_config"
-  [ -f "$outbound_config" ] || die "出站配置文件不存在: $outbound_config"
-  [ -d "$CONFDIR" ] || die "confdir 目录不存在: $CONFDIR"
-
-  log "INFO" "配置目录: $CONFDIR"
-  log "INFO" "路由配置: $routing_config"
-  log "INFO" "出站配置: $outbound_config"
+  log "INFO" "Xray 配置: $xray_config"
 
   # 启动 Xray (root:net_admin)
   nohup "$BUSYBOX" setuidgid root:net_admin "$XRAY_BIN" run \
-    -confdir "$CONFDIR" \
-    -config "$routing_config" \
-    -config "$outbound_config" \
+    -config "$xray_config" \
     > "$XRAY_LOG_FILE" 2>&1 &
 
   local xray_pid=$!

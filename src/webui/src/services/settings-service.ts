@@ -355,10 +355,8 @@ export class SettingsService {
   // 获取 DNS 配置
   static async getDnsConfig() {
     try {
-      const output = await KSU.exec(
-        `cat ${KSU.MODULE_PATH}/config/xray/confdir/02_dns.json`,
-      );
-      return JSON.parse(output);
+      const output = await this.readCurrentXrayConfig();
+      return { dns: JSON.parse(output).dns || { hosts: {}, servers: [] } };
     } catch (error) {
       console.error("获取 DNS 配置失败:", error);
       return { dns: { hosts: {}, servers: [] } };
@@ -370,14 +368,23 @@ export class SettingsService {
   // 获取路由规则列表
   static async getRoutingRules() {
     try {
-      const output = await KSU.exec(
-        `cat ${KSU.MODULE_PATH}/config/xray/confdir/routing/routing_rules.json`,
-      );
-      return JSON.parse(output);
+      const output = await this.readCurrentXrayConfig();
+      return JSON.parse(output).routing?.rules || [];
     } catch (error) {
       console.error("获取路由规则失败:", error);
       return [];
     }
+  }
+
+  static async readCurrentXrayConfig(): Promise<string> {
+    const moduleConf = await KSU.exec(
+      `cat ${KSU.MODULE_PATH}/config/module.conf 2>/dev/null || echo`,
+    );
+    const currentConfig = moduleConf.match(/CURRENT_CONFIG="([^"]*)"/)?.[1] || "";
+    if (!currentConfig) {
+      throw new Error("CURRENT_CONFIG is not set");
+    }
+    return await KSU.exec(`cat '${currentConfig}'`);
   }
 
   // ===================== 导出功能 =====================

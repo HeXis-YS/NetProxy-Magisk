@@ -25,14 +25,6 @@ interface ExternalIPInfo {
   countryCode: string;
 }
 
-interface XrayRule {
-  type: string;
-  inboundTag?: string[];
-  outboundTag: string;
-  port?: string;
-  [key: string]: unknown;
-}
-
 /**
  * Status Service - 状态页面相关业务逻辑
  */
@@ -473,32 +465,5 @@ export class StatusService {
         }
       }
     });
-  }
-
-  // ==================== 出站模式 ====================
-
-  // 获取当前出站模式
-  static async getOutboundMode(): Promise<string> {
-    try {
-      const output = await KSU.exec(
-        `grep '^OUTBOUND_MODE=' ${KSU.MODULE_PATH}/config/module.conf 2>/dev/null | cut -d'=' -f2`,
-      );
-      return output.trim() || "rule";
-    } catch (error) {
-      return "rule";
-    }
-  }
-
-  // 设置出站模式
-  static async setOutboundMode(mode: string): Promise<boolean> {
-    try {
-      const result = await KSU.exec(
-        `sh ${KSU.MODULE_PATH}/scripts/core/switch-mode.sh ${mode}`,
-      );
-      return result.includes("success");
-    } catch (error) {
-      console.error("设置出站模式失败:", error);
-      return false;
-    }
   }
 }
