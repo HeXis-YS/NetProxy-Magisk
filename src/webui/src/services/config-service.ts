@@ -44,7 +44,8 @@ export class ConfigService {
 
   static async readConfig(filename: string): Promise<string> {
     const configPath = `${KSU.MODULE_PATH}/config/xray/configs/${filename}`;
-    return await KSU.exec(`cat '${configPath}'`);
+    const content = await KSU.exec(`cat '${configPath}'`);
+    return JSON.stringify(JSON.parse(content), null, 2);
   }
 
   static async saveConfig(
@@ -52,14 +53,14 @@ export class ConfigService {
     content: string,
   ): Promise<OperationResult> {
     try {
-      JSON.parse(content);
+      const normalizedContent = JSON.stringify(JSON.parse(content), null, 2);
       const safeName = filename.endsWith(".json") ? filename : `${filename}.json`;
       if (!/^[a-zA-Z0-9._-]+\.json$/.test(safeName)) {
         return { success: false, error: "Invalid filename" };
       }
       const configPath = `${KSU.MODULE_PATH}/config/xray/configs/${safeName}`;
       const tempPath = `${configPath}.tmp`;
-      const base64 = btoa(unescape(encodeURIComponent(content)));
+      const base64 = btoa(unescape(encodeURIComponent(normalizedContent)));
       await KSU.exec(`mkdir -p ${KSU.MODULE_PATH}/config/xray/configs`);
       await KSU.exec(`echo '${base64}' | base64 -d > '${tempPath}'`);
       await KSU.exec(`mv '${tempPath}' '${configPath}'`);
