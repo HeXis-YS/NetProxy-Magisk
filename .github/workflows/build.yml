@@ -16,7 +16,7 @@ permissions:
 jobs:
   build:
     name: 构建
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       commit_count: ${{ steps.get_version.outputs.commit_count }}
     steps:
