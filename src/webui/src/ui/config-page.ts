@@ -416,16 +416,6 @@ export class ConfigPageManager {
       });
       menu.appendChild(sortItem);
 
-      // 清理无效节点
-      const cleanItem = document.createElement("mdui-menu-item");
-      cleanItem.innerHTML = `<mdui-icon slot="icon" name="delete_sweep"></mdui-icon>${I18nService.t("config.menu.clean")}`;
-      cleanItem.style.color = "var(--mdui-color-error)";
-      cleanItem.addEventListener("click", () => {
-        dropdown.open = false;
-        this.deleteInvalidNodes(group.name);
-      });
-      menu.appendChild(cleanItem);
-
       dropdown.appendChild(menu);
       actions.appendChild(dropdown);
       panel.appendChild(actions);
@@ -642,16 +632,6 @@ export class ConfigPageManager {
 
     const menu = document.createElement("mdui-menu");
 
-    // 编辑
-    const editItem = document.createElement("mdui-menu-item");
-    editItem.innerHTML = `<mdui-icon slot="icon" name="edit"></mdui-icon>${I18nService.t("config.menu.edit")}`;
-    editItem.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      dropdown.open = false;
-      await this.ui.showConfigDialog(fullPath);
-    });
-    menu.appendChild(editItem);
-
     // 测试
     const testItem = document.createElement("mdui-menu-item");
     testItem.innerHTML = `<mdui-icon slot="icon" name="speed"></mdui-icon>${I18nService.t("config.menu.test")}`;
@@ -661,19 +641,6 @@ export class ConfigPageManager {
       await this.testConfig(displayName, info.address, item);
     });
     menu.appendChild(testItem);
-
-    // 删除（非当前配置可删除）
-    if (!isCurrent) {
-      const deleteItem = document.createElement("mdui-menu-item");
-      deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("config.menu.delete")}`;
-      deleteItem.style.color = "var(--mdui-color-error)";
-      deleteItem.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        dropdown.open = false;
-        await this.deleteConfig(fullPath, displayName);
-      });
-      menu.appendChild(deleteItem);
-    }
 
     dropdown.appendChild(menu);
     item.appendChild(dropdown);
@@ -810,83 +777,6 @@ export class ConfigPageManager {
     await this.renderActiveTab(groupName);
   }
 
-  // 清理无效节点 (失败/超时)
-  async deleteInvalidNodes(groupName) {
-    const infos = this._cachedConfigInfos.get(groupName);
-    if (!infos) {
-      toast(I18nService.t("config.toast.need_test"));
-      return;
-    }
-
-    const invalidFiles = [];
-    for (const [filename, info] of infos.entries()) {
-      const cachedLatency = this._latencyCache.get(filename);
-      if (
-        cachedLatency &&
-        (cachedLatency.latencyStr === "failed" ||
-          cachedLatency.latencyStr === "timeout")
-      ) {
-        invalidFiles.push(filename);
-        this._latencyCache.delete(filename);
-      }
-    }
-
-    if (invalidFiles.length === 0) {
-      toast(I18nService.t("config.toast.no_invalid"));
-      return;
-    }
-
-    const confirmed = await this.ui.confirm(
-      I18nService.t("config.confirm.clean_invalid", {
-        count: invalidFiles.length,
-      }),
-    );
-    if (!confirmed) return;
-
-    const group = this._cachedGroups.find((g) => g.name === groupName);
-    let successCount = 0;
-
-    for (const filename of invalidFiles) {
-      const fullPath = group.dirName
-        ? `${group.dirName}/${filename}`
-        : filename;
-      const result = await ConfigService.deleteConfig(fullPath);
-      if (result && result.success) {
-        successCount++;
-      }
-    }
-
-    toast(I18nService.t("config.toast.clean_success", { count: successCount }));
-    // 强制刷新
-    this._cachedConfigInfos.delete(groupName);
-    this.update();
-  }
-
-  async deleteConfig(fullPath, displayName) {
-    try {
-      const confirmed = await this.ui.confirm(
-        I18nService.t("config.confirm.delete_node", { name: displayName }),
-      );
-      if (!confirmed) return;
-
-      const result = await ConfigService.deleteConfig(fullPath);
-      if (result && result.success) {
-        toast(I18nService.t("config.toast.deleted"));
-        // 强制刷新配置列表
-        this._cachedGroups = null;
-        this._cachedConfigInfos.clear();
-        await this.update(true);
-      } else {
-        toast(
-          I18nService.t("config.toast.delete_failed") +
-            (result?.error || I18nService.t("common.unknown")),
-        );
-      }
-    } catch (error) {
-      toast(I18nService.t("config.toast.delete_failed") + error.message);
-    }
-  }
-
   async switchConfig(fullPath, displayName) {
     try {
       await ConfigService.switchConfig(fullPath);
@@ -900,84 +790,6 @@ export class ConfigPageManager {
       await this.ui.statusPage.update();
     } catch (error) {
       toast(I18nService.t("config.toast.switch_failed") + error.message);
-    }
-  }
-
-  // ===================== 原有方法 =====================
-
-  async showDialog(filename: string | null = null): Promise<void> {
-    const dialog = document.getElementById("config-dialog") as any;
-    const filenameInput = document.getElementById(
-      "config-filename",
-    ) as HTMLInputElement | null;
-    const contentInput = document.getElementById(
-      "config-content",
-    ) as HTMLTextAreaElement | null;
-
-    if (!filenameInput || !contentInput) return;
-
-    if (filename) {
-      filenameInput.value = filename;
-      filenameInput.disabled = true;
-      const content = await ConfigService.readConfig(filename);
-      contentInput.value = content;
-    } else {
-      filenameInput.value = "";
-      filenameInput.disabled = false;
-      contentInput.value = JSON.stringify(
-        {
-          outbounds: [
-            {
-              protocol: "vless",
-              tag: "proxy",
-              settings: {
-                vnext: [{ address: "", port: 443, users: [{ id: "" }] }],
-              },
-            },
-            { protocol: "freedom", tag: "direct" },
-            { protocol: "blackhole", tag: "block" },
-          ],
-        },
-        null,
-        2,
-      );
-    }
-
-    if (dialog) dialog.open = true;
-  }
-
-  async saveConfig(): Promise<void> {
-    const filenameInput = document.getElementById(
-      "config-filename",
-    ) as HTMLInputElement | null;
-    const contentInput = document.getElementById(
-      "config-content",
-    ) as HTMLTextAreaElement | null;
-
-    if (!filenameInput || !contentInput) return;
-
-    const filename = filenameInput.value.trim();
-    const content = contentInput.value;
-
-    if (!filename) {
-      toast(I18nService.t("config.toast.enter_filename"));
-      return;
-    }
-
-    if (!filename.endsWith(".json")) {
-      toast(I18nService.t("config.toast.filename_json"));
-      return;
-    }
-
-    try {
-      JSON.parse(content);
-      await ConfigService.saveConfig(filename, content);
-      toast(I18nService.t("config.toast.save_success"));
-      const dialog = document.getElementById("config-dialog") as any;
-      if (dialog) dialog.open = false;
-      this.update();
-    } catch (error: any) {
-      toast(I18nService.t("config.toast.save_failed") + error.message);
     }
   }
 

@@ -4,7 +4,6 @@ import { I18nService } from "../i18n/i18n-service.js";
 import { setColorScheme } from "mdui/functions/setColorScheme.js";
 import { setTheme } from "mdui/functions/setTheme.js";
 import type { UI } from "./ui-core.js";
-import Sortable from "sortablejs";
 
 const logoUrl = "/logo.png";
 
@@ -44,7 +43,6 @@ export class SettingsPageManager {
   editingServerIndex: number;
   editingHostKey: string | null;
   draggedIndex: number | null;
-  sortable: Sortable | null;
   // Logs related
   _logsSelectedTab: string;
   _logsAutoRefreshEnabled: boolean;
@@ -60,7 +58,6 @@ export class SettingsPageManager {
     this.editingServerIndex = -1;
     this.editingHostKey = null;
     this.draggedIndex = null;
-    this.sortable = null;
     // Logs related
     this._logsSelectedTab = "service";
     this._logsAutoRefreshEnabled = false;
@@ -229,75 +226,6 @@ export class SettingsPageManager {
       });
     }
 
-    // 添加规则按钮
-    const addBtn = document.getElementById("add-routing-rule-btn");
-    if (addBtn) {
-      addBtn.addEventListener("click", () => {
-        this.showRuleDialog();
-      });
-    }
-
-    // 规则对话框事件
-    const cancelBtn = document.getElementById("rule-cancel");
-    if (cancelBtn) {
-      cancelBtn.addEventListener("click", () => {
-        (document.getElementById("routing-rule-dialog") as any).open = false;
-      });
-    }
-
-    const saveBtn = document.getElementById("rule-save");
-    if (saveBtn) {
-      saveBtn.addEventListener("click", () => {
-        this.saveRule();
-      });
-    }
-
-    // Clash 规则导入按钮
-    const importClashBtn = document.getElementById("import-clash-rules-btn");
-    if (importClashBtn) {
-      importClashBtn.addEventListener("click", () => {
-        this.showClashImportDialog();
-      });
-    }
-
-    // Clash 导入对话框事件
-    const clashCancelBtn = document.getElementById("clash-import-cancel");
-    if (clashCancelBtn) {
-      clashCancelBtn.addEventListener("click", () => {
-        (document.getElementById("clash-import-dialog") as any).open = false;
-      });
-    }
-
-    const clashConfirmBtn = document.getElementById("clash-import-confirm");
-    if (clashConfirmBtn) {
-      clashConfirmBtn.addEventListener("click", () => {
-        this.importClashRules();
-      });
-    }
-
-    // 初始化拖拽排序
-    const listEl = document.getElementById("routing-rules-list");
-    if (listEl) {
-      this.sortable = new Sortable(listEl, {
-        animation: 200,
-        handle: ".drag-handle", // 仅允许通过手柄拖拽
-        ghostClass: "sortable-ghost",
-        dragClass: "sortable-drag",
-        forceFallback: true,
-        fallbackClass: "sortable-drag",
-        fallbackOnBody: true,
-        onEnd: (evt) => {
-          const { oldIndex, newIndex } = evt;
-          if (
-            oldIndex !== undefined &&
-            newIndex !== undefined &&
-            oldIndex !== newIndex
-          ) {
-            this.moveRule(oldIndex, newIndex);
-          }
-        },
-      });
-    }
   }
 
   async loadRoutingRules() {
@@ -360,15 +288,6 @@ export class SettingsPageManager {
           block: I18nService.t("settings.routing.outbound_block"),
         }[rule.outboundTag] || rule.outboundTag;
 
-      // 拖拽手柄
-      const dragHandle = document.createElement("mdui-icon");
-      dragHandle.setAttribute("slot", "icon");
-      dragHandle.setAttribute("name", "drag_indicator");
-      dragHandle.classList.add("drag-handle"); // 添加标识类
-      dragHandle.style.cssText =
-        "cursor: grab; color: var(--mdui-color-on-surface-variant); touch-action: none;"; // touch-action: none 对 Sortable 很重要
-      item.appendChild(dragHandle);
-
       item.setAttribute(
         "headline",
         rule.name ||
@@ -404,60 +323,8 @@ export class SettingsPageManager {
       // 启用开关
       const switchEl = document.createElement("mdui-switch") as any;
       switchEl.checked = rule.enabled !== false;
-      switchEl.addEventListener("change", async (e: Event) => {
-        e.stopPropagation();
-        rule.enabled = (e.target as HTMLInputElement).checked;
-        await this.saveRulesToBackend();
-      });
+      switchEl.disabled = true;
       endContainer.appendChild(switchEl);
-
-      // 菜单
-      const dropdown = document.createElement("mdui-dropdown");
-      dropdown.setAttribute("placement", "bottom-end");
-
-      const menuBtn = document.createElement("mdui-button-icon");
-      menuBtn.setAttribute("slot", "trigger");
-      menuBtn.setAttribute("icon", "more_vert");
-      menuBtn.addEventListener("click", (e) => e.stopPropagation());
-      dropdown.appendChild(menuBtn);
-
-      const menu = document.createElement("mdui-menu");
-
-      // 编辑
-      const editItem = document.createElement("mdui-menu-item");
-      editItem.innerHTML = `<mdui-icon slot="icon" name="edit"></mdui-icon>${I18nService.t("common.edit")}`;
-      editItem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        (dropdown as any).open = false;
-        this.showRuleDialog(rule, index);
-      });
-      menu.appendChild(editItem);
-
-      // 删除
-      const deleteItem = document.createElement("mdui-menu-item");
-      deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("common.delete")}`;
-      deleteItem.style.color = "var(--mdui-color-error)";
-      deleteItem.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        (dropdown as any).open = false;
-        if (
-          await this.ui.confirm(
-            I18nService.t("settings.routing.confirm_delete", {
-              name:
-                rule.name ||
-                `${I18nService.t("settings.routing.rule_prefix")}${index + 1}`,
-            }),
-          )
-        ) {
-          this.routingRules.splice(index, 1);
-          await this.saveRulesToBackend();
-          this.renderRoutingRules();
-        }
-      });
-      menu.appendChild(deleteItem);
-
-      dropdown.appendChild(menu);
-      endContainer.appendChild(dropdown);
       item.appendChild(endContainer);
 
       listEl.appendChild(item);
@@ -465,202 +332,6 @@ export class SettingsPageManager {
   }
 
   // 移动规则
-  async moveRule(fromVisibleIndex: number, toVisibleIndex: number) {
-    // 找出所有可见规则及其在原数组中的索引
-    const visibleIndices: number[] = [];
-    this.routingRules.forEach((rule, index) => {
-      if (rule.visible !== false) {
-        visibleIndices.push(index);
-      }
-    });
-
-    if (fromVisibleIndex >= visibleIndices.length || toVisibleIndex >= visibleIndices.length) {
-      return;
-    }
-
-    const fromRealIndex = visibleIndices[fromVisibleIndex];
-    const toRealIndex = visibleIndices[toVisibleIndex];
-
-    // 执行移动操作
-    const [movedRule] = this.routingRules.splice(fromRealIndex, 1);
-    this.routingRules.splice(toRealIndex, 0, movedRule);
-
-    await this.saveRulesToBackend();
-    this.renderRoutingRules();
-    toast(I18nService.t("routing.toast_reordered"));
-  }
-
-  showRuleDialog(rule: RoutingRule | null = null, index = -1): void {
-    this.editingRuleIndex = index;
-    const dialog = document.getElementById("routing-rule-dialog") as any;
-
-    // 设置标题
-    dialog.headline = rule
-      ? I18nService.t("settings.routing.dialog_edit")
-      : I18nService.t("settings.routing.dialog_add");
-
-    // 填充表单
-    (document.getElementById("rule-name") as HTMLInputElement).value =
-      rule?.name || "";
-    (document.getElementById("rule-domain") as HTMLInputElement).value =
-      rule?.domain || "";
-    (document.getElementById("rule-ip") as HTMLInputElement).value =
-      rule?.ip || "";
-    (document.getElementById("rule-port") as HTMLInputElement).value =
-      rule?.port || "";
-    (document.getElementById("rule-protocol") as HTMLInputElement).value =
-      rule?.protocol || "";
-    (document.getElementById("rule-network") as HTMLInputElement).value =
-      rule?.network || "";
-    (document.getElementById("rule-outbound") as HTMLInputElement).value =
-      rule?.outboundTag || "proxy";
-
-    dialog.open = true;
-  }
-
-  async saveRule(): Promise<void> {
-    const name = (
-      document.getElementById("rule-name") as HTMLInputElement
-    ).value.trim();
-    const domain = (
-      document.getElementById("rule-domain") as HTMLInputElement
-    ).value.trim();
-    const ip = (
-      document.getElementById("rule-ip") as HTMLInputElement
-    ).value.trim();
-    const port = (
-      document.getElementById("rule-port") as HTMLInputElement
-    ).value.trim();
-    const protocol = (
-      document.getElementById("rule-protocol") as HTMLInputElement
-    ).value.trim();
-    const network = (
-      document.getElementById("rule-network") as HTMLInputElement
-    ).value.trim();
-    const outboundTag = (
-      document.getElementById("rule-outbound") as HTMLInputElement
-    ).value;
-
-    // 验证
-    if (!domain && !ip && !port && !protocol && !network) {
-      toast(I18nService.t("settings.routing.toast_input_condition"));
-      return;
-    }
-
-    const rule: RoutingRule = {
-      name:
-        name ||
-        (this.editingRuleIndex >= 0
-          ? `${I18nService.t("settings.routing.rule_prefix")}${this.editingRuleIndex + 1}`
-          : `${I18nService.t("settings.routing.rule_prefix")}${this.routingRules.length + 1}`),
-      type: "field",
-      domain,
-      ip,
-      port,
-      protocol,
-      network,
-      outboundTag,
-      enabled: true,
-      visible: true,
-    };
-
-    if (this.editingRuleIndex >= 0) {
-      // 保留原有的 enabled 和 visible 状态
-      const oldRule = this.routingRules[this.editingRuleIndex];
-      rule.enabled = oldRule.enabled !== false;
-      rule.visible = oldRule.visible !== false;
-      this.routingRules[this.editingRuleIndex] = rule;
-    } else {
-      this.routingRules.push(rule);
-    }
-
-    await this.saveRulesToBackend();
-    this.renderRoutingRules();
-    (document.getElementById("routing-rule-dialog") as any).open = false;
-    toast(
-      this.editingRuleIndex >= 0
-        ? I18nService.t("settings.routing.toast_updated")
-        : I18nService.t("settings.routing.toast_added"),
-    );
-  }
-
-  async saveRulesToBackend() {
-    try {
-      await SettingsService.saveRoutingRules(this.routingRules);
-      await SettingsService.applyRoutingRules(this.routingRules);
-    } catch (error) {
-      console.error("保存规则失败:", error);
-      toast(I18nService.t("common.save_failed") + error.message);
-    }
-  }
-
-  // Clash 规则导入对话框
-  showClashImportDialog(): void {
-    const dialog = document.getElementById("clash-import-dialog") as any;
-    (document.getElementById("clash-rule-name") as HTMLInputElement).value = "";
-    (document.getElementById("clash-rule-url") as HTMLInputElement).value = "";
-    (document.getElementById("clash-rule-outbound") as HTMLInputElement).value =
-      "block";
-    dialog.open = true;
-  }
-
-  // 导入 Clash 规则
-  async importClashRules(): Promise<void> {
-    const name = (
-      document.getElementById("clash-rule-name") as HTMLInputElement
-    ).value.trim();
-    const url = (
-      document.getElementById("clash-rule-url") as HTMLInputElement
-    ).value.trim();
-    const outboundTag = (
-      document.getElementById("clash-rule-outbound") as HTMLInputElement
-    ).value;
-
-    if (!url) {
-      toast(I18nService.t("routing.toast_url_required"));
-      return;
-    }
-
-    try {
-      toast(I18nService.t("routing.toast_importing"));
-
-      // 使用 Service 层获取并解析域名列表
-      const domains = await SettingsService.importClashRulesFromUrl(url);
-
-      if (domains.length === 0) {
-        toast(I18nService.t("routing.toast_no_domains"));
-        return;
-      }
-
-      // 创建路由规则
-      const rule: RoutingRule = {
-        name: name || `Clash 规则 (${domains.length} 条)`,
-        type: "field",
-        domain: domains.join(","),
-        ip: "",
-        port: "",
-        protocol: "",
-        network: "",
-        outboundTag: outboundTag,
-        enabled: true,
-      };
-
-      this.routingRules.push(rule);
-      await this.saveRulesToBackend();
-      this.renderRoutingRules();
-
-      (document.getElementById("clash-import-dialog") as any).open = false;
-      toast(
-        I18nService.t("routing.toast_imported", {
-          count: String(domains.length),
-        }),
-      );
-    } catch (error: any) {
-      console.error("导入 Clash 规则失败:", error);
-      toast(I18nService.t("routing.toast_import_failed") + error.message);
-    }
-  }
-
   // ===================== DNS 设置页面 =====================
 
   setupDnsPage() {
@@ -672,52 +343,6 @@ export class SettingsPageManager {
       });
     }
 
-    // 添加服务器按钮
-    const addServerBtn = document.getElementById("add-dns-server-btn");
-    if (addServerBtn) {
-      addServerBtn.addEventListener("click", () => {
-        this.showServerDialog();
-      });
-    }
-
-    // 添加 Host 按钮
-    const addHostBtn = document.getElementById("add-dns-host-btn");
-    if (addHostBtn) {
-      addHostBtn.addEventListener("click", () => {
-        this.showHostDialog();
-      });
-    }
-
-    // 服务器对话框事件
-    const serverCancelBtn = document.getElementById("dns-server-cancel");
-    if (serverCancelBtn) {
-      serverCancelBtn.addEventListener("click", () => {
-        const dialog = document.getElementById("dns-server-dialog") as any;
-        if (dialog) dialog.open = false;
-      });
-    }
-
-    const serverSaveBtn = document.getElementById("dns-server-save");
-    if (serverSaveBtn) {
-      serverSaveBtn.addEventListener("click", () => {
-        this.saveServer();
-      });
-    }
-
-    // Host 对话框事件
-    const hostCancelBtn = document.getElementById("dns-host-cancel");
-    if (hostCancelBtn) {
-      hostCancelBtn.addEventListener("click", () => {
-        (document.getElementById("dns-host-dialog") as any).open = false;
-      });
-    }
-
-    const hostSaveBtn = document.getElementById("dns-host-save");
-    if (hostSaveBtn) {
-      hostSaveBtn.addEventListener("click", () => {
-        this.saveHost();
-      });
-    }
   }
 
   async loadDnsConfig() {
@@ -771,56 +396,6 @@ export class SettingsPageManager {
         item.appendChild(descSpan);
       }
 
-      // 编辑/删除操作
-      const endContainer = document.createElement("div");
-      endContainer.slot = "end-icon";
-      endContainer.style.cssText =
-        "display: flex; align-items: center; gap: 4px;";
-
-      const dropdown = document.createElement("mdui-dropdown");
-      dropdown.setAttribute("placement", "bottom-end");
-
-      const menuBtn = document.createElement("mdui-button-icon");
-      menuBtn.setAttribute("slot", "trigger");
-      menuBtn.setAttribute("icon", "more_vert");
-      menuBtn.addEventListener("click", (e) => e.stopPropagation());
-      dropdown.appendChild(menuBtn);
-
-      const menu = document.createElement("mdui-menu");
-
-      const editItem = document.createElement("mdui-menu-item");
-      editItem.innerHTML = `<mdui-icon slot="icon" name="edit"></mdui-icon>${I18nService.t("common.edit")}`;
-      editItem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        dropdown.open = false;
-        this.showServerDialog(server, index);
-      });
-      menu.appendChild(editItem);
-
-      const deleteItem = document.createElement("mdui-menu-item");
-      deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("common.delete")}`;
-      deleteItem.style.color = "var(--mdui-color-error)";
-      deleteItem.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        dropdown.open = false;
-        if (
-          await this.ui.confirm(
-            I18nService.t("settings.dns.confirm_delete_server", {
-              address: address,
-            }),
-          )
-        ) {
-          this.dnsConfig.dns.servers.splice(index, 1);
-          await this.saveDnsToBackend();
-          this.renderDnsServers();
-        }
-      });
-      menu.appendChild(deleteItem);
-
-      dropdown.appendChild(menu);
-      endContainer.appendChild(dropdown);
-      item.appendChild(endContainer);
-
       listEl.appendChild(item);
     });
   }
@@ -855,234 +430,8 @@ export class SettingsPageManager {
         ips.slice(0, 3).join(", ") + (ips.length > 3 ? "..." : "");
       item.appendChild(descSpan);
 
-      // 编辑/删除操作
-      const endContainer = document.createElement("div");
-      endContainer.slot = "end-icon";
-      endContainer.style.cssText =
-        "display: flex; align-items: center; gap: 4px;";
-
-      const dropdown = document.createElement("mdui-dropdown");
-      dropdown.setAttribute("placement", "bottom-end");
-
-      const menuBtn = document.createElement("mdui-button-icon");
-      menuBtn.setAttribute("slot", "trigger");
-      menuBtn.setAttribute("icon", "more_vert");
-      menuBtn.addEventListener("click", (e) => e.stopPropagation());
-      dropdown.appendChild(menuBtn);
-
-      const menu = document.createElement("mdui-menu");
-
-      const editItem = document.createElement("mdui-menu-item");
-      editItem.innerHTML = `<mdui-icon slot="icon" name="edit"></mdui-icon>${I18nService.t("common.edit")}`;
-      editItem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        dropdown.open = false;
-        this.showHostDialog(domain, value);
-      });
-      menu.appendChild(editItem);
-
-      const deleteItem = document.createElement("mdui-menu-item");
-      deleteItem.innerHTML = `<mdui-icon slot="icon" name="delete"></mdui-icon>${I18nService.t("common.delete")}`;
-      deleteItem.style.color = "var(--mdui-color-error)";
-      deleteItem.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        dropdown.open = false;
-        if (
-          await this.ui.confirm(
-            I18nService.t("settings.dns.confirm_delete_host", {
-              domain: domain,
-            }),
-          )
-        ) {
-          delete this.dnsConfig.dns.hosts[domain];
-          await this.saveDnsToBackend();
-          this.renderDnsHosts();
-        }
-      });
-      menu.appendChild(deleteItem);
-
-      dropdown.appendChild(menu);
-      endContainer.appendChild(dropdown);
-      item.appendChild(endContainer);
-
       listEl.appendChild(item);
     });
-  }
-
-  showServerDialog(server: string | DnsServer | null = null, index = -1): void {
-    this.editingServerIndex = index;
-    const dialog = document.getElementById("dns-server-dialog") as any;
-    dialog.headline = server
-      ? I18nService.t("settings.dns.server_dialog_edit")
-      : I18nService.t("settings.dns.server_dialog_add");
-
-    const isSimple = typeof server === "string";
-    const address = server
-      ? isSimple
-        ? server
-        : (server as DnsServer).address
-      : "";
-    const domains =
-      server && !isSimple
-        ? ((server as DnsServer).domains || []).join(", ")
-        : "";
-    const expectIPs =
-      server && !isSimple
-        ? ((server as DnsServer).expectIPs || []).join(", ")
-        : "";
-    const skipFallback =
-      server && !isSimple ? !!(server as DnsServer).skipFallback : false;
-    const tag = server && !isSimple ? (server as DnsServer).tag || "" : "";
-
-    (document.getElementById("dns-server-address") as HTMLInputElement).value =
-      address;
-    (document.getElementById("dns-server-domains") as HTMLInputElement).value =
-      domains;
-    (
-      document.getElementById("dns-server-expect-ips") as HTMLInputElement
-    ).value = expectIPs;
-    (
-      document.getElementById("dns-server-skip-fallback") as HTMLInputElement
-    ).checked = skipFallback;
-    (document.getElementById("dns-server-tag") as HTMLInputElement).value = tag;
-
-    dialog.open = true;
-  }
-
-  showHostDialog(
-    domain: string | null = null,
-    value: string | string[] | null = null,
-  ): void {
-    this.editingHostKey = domain;
-    const dialog = document.getElementById("dns-host-dialog") as any;
-    dialog.headline = domain
-      ? I18nService.t("settings.dns.host_dialog_edit")
-      : I18nService.t("settings.dns.host_dialog_add");
-
-    const ips = value ? (Array.isArray(value) ? value.join(", ") : value) : "";
-
-    (document.getElementById("dns-host-domain") as HTMLInputElement).value =
-      domain || "";
-    (document.getElementById("dns-host-ip") as HTMLInputElement).value = ips;
-
-    dialog.open = true;
-  }
-
-  async saveServer(): Promise<void> {
-    const address = (
-      document.getElementById("dns-server-address") as HTMLInputElement
-    ).value.trim();
-    const domainsStr = (
-      document.getElementById("dns-server-domains") as HTMLInputElement
-    ).value.trim();
-    const expectIPsStr = (
-      document.getElementById("dns-server-expect-ips") as HTMLInputElement
-    ).value.trim();
-    const skipFallback = (
-      document.getElementById("dns-server-skip-fallback") as HTMLInputElement
-    ).checked;
-    const tag = (
-      document.getElementById("dns-server-tag") as HTMLInputElement
-    ).value.trim();
-
-    if (!address) {
-      toast(I18nService.t("settings.dns.toast_enter_address"));
-      return;
-    }
-
-    const domains = domainsStr
-      ? domainsStr
-        .split(",")
-        .map((d) => d.trim())
-        .filter((d) => d)
-      : [];
-    const expectIPs = expectIPsStr
-      ? expectIPsStr
-        .split(",")
-        .map((i) => i.trim())
-        .filter((i) => i)
-      : [];
-
-    let server: string | DnsServer;
-    if (!domains.length && !expectIPs.length && !skipFallback && !tag) {
-      server = address;
-    } else {
-      server = { address } as DnsServer;
-      if (domains.length) (server as DnsServer).domains = domains;
-      if (expectIPs.length) (server as DnsServer).expectIPs = expectIPs;
-      if (skipFallback) (server as DnsServer).skipFallback = true;
-      if (tag) (server as DnsServer).tag = tag;
-    }
-
-    if (!this.dnsConfig.dns) this.dnsConfig.dns = { hosts: {}, servers: [] };
-    if (!this.dnsConfig.dns.servers) this.dnsConfig.dns.servers = [];
-
-    if (this.editingServerIndex >= 0) {
-      this.dnsConfig.dns.servers[this.editingServerIndex] = server;
-    } else {
-      this.dnsConfig.dns.servers.push(server);
-    }
-
-    await this.saveDnsToBackend();
-    this.renderDnsServers();
-    (document.getElementById("dns-server-dialog") as any).open = false;
-    toast(
-      this.editingServerIndex >= 0
-        ? I18nService.t("settings.dns.toast_server_updated")
-        : I18nService.t("settings.dns.toast_server_added"),
-    );
-  }
-
-  async saveHost(): Promise<void> {
-    const domain = (
-      document.getElementById("dns-host-domain") as HTMLInputElement
-    ).value.trim();
-    const ipStr = (
-      document.getElementById("dns-host-ip") as HTMLInputElement
-    ).value.trim();
-
-    if (!domain) {
-      toast(I18nService.t("settings.dns.toast_enter_domain"));
-      return;
-    }
-    if (!ipStr) {
-      toast(I18nService.t("settings.dns.toast_enter_ip"));
-      return;
-    }
-
-    const ips = ipStr
-      .split(",")
-      .map((i) => i.trim())
-      .filter((i) => i);
-    const value = ips.length === 1 ? ips[0] : ips;
-
-    if (!this.dnsConfig.dns) this.dnsConfig.dns = { hosts: {}, servers: [] };
-    if (!this.dnsConfig.dns.hosts) this.dnsConfig.dns.hosts = {};
-
-    // 如果是编辑且域名改变了，删除旧的
-    if (this.editingHostKey && this.editingHostKey !== domain) {
-      delete this.dnsConfig.dns.hosts[this.editingHostKey];
-    }
-
-    this.dnsConfig.dns.hosts[domain] = value;
-
-    await this.saveDnsToBackend();
-    this.renderDnsHosts();
-    (document.getElementById("dns-host-dialog") as any).open = false;
-    toast(
-      this.editingHostKey
-        ? I18nService.t("settings.dns.toast_host_updated")
-        : I18nService.t("settings.dns.toast_host_added"),
-    );
-  }
-
-  async saveDnsToBackend() {
-    try {
-      await SettingsService.saveDnsConfig(this.dnsConfig);
-    } catch (error) {
-      console.error("保存 DNS 配置失败:", error);
-      toast(I18nService.t("common.save_failed") + error.message);
-    }
   }
 
   // ===================== 代理设置页面 =====================

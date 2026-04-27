@@ -13,12 +13,6 @@ interface ConfigInfo {
   port: string;
 }
 
-interface OperationResult {
-  success: boolean;
-  error?: string;
-  output?: string;
-}
-
 /**
  * Config Service - 节点页面相关业务逻辑
  */
@@ -48,13 +42,6 @@ export class ConfigService {
     } catch (e) { }
 
     return groups;
-  }
-
-  // 读取配置文件（从 outbounds 目录）
-  static async readConfig(filename: string): Promise<string> {
-    return await KSU.exec(
-      `cat '${KSU.MODULE_PATH}/config/xray/outbounds/${filename}'`,
-    );
   }
 
   // 批量读取多个配置文件的基本信息
@@ -100,25 +87,6 @@ EOF
     }
 
     return infoMap;
-  }
-
-  // 保存配置文件
-  static async saveConfig(filename: string, content: string): Promise<void> {
-    const escaped = content.replace(/'/g, "'\\''");
-    await KSU.exec(
-      `echo '${escaped}' > '${KSU.MODULE_PATH}/config/xray/outbounds/${filename}'`,
-    );
-  }
-
-  static async deleteConfig(filename: string): Promise<OperationResult> {
-    try {
-      await KSU.exec(
-        `rm '${KSU.MODULE_PATH}/config/xray/outbounds/${filename}'`,
-      );
-      return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
   }
 
   // 切换配置（支持热切换）

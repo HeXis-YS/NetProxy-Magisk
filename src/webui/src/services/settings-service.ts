@@ -93,18 +93,6 @@ export interface RoutingRule {
   visible?: boolean;
 }
 
-/** Xray 路由规则 */
-interface XrayRule {
-  type: string;
-  domain?: string[];
-  ip?: string[];
-  port?: string;
-  protocol?: string[];
-  network?: string;
-  inboundTag?: string[];
-  outboundTag: string;
-}
-
 /** 操作结果接口 */
 interface OperationResult {
   success: boolean;
@@ -377,21 +365,6 @@ export class SettingsService {
     }
   }
 
-  // 保存 DNS 配置
-  static async saveDnsConfig(config) {
-    try {
-      const json = JSON.stringify(config, null, 4);
-      const base64 = btoa(unescape(encodeURIComponent(json)));
-      await KSU.exec(
-        `echo '${base64}' | base64 -d > ${KSU.MODULE_PATH}/config/xray/confdir/02_dns.json`,
-      );
-      return { success: true };
-    } catch (error: any) {
-      console.error("保存 DNS 配置失败:", error);
-      return { success: false, error: error.message };
-    }
-  }
-
   // ===================== 路由规则管理 =====================
 
   // 获取路由规则列表
@@ -404,116 +377,6 @@ export class SettingsService {
     } catch (error) {
       console.error("获取路由规则失败:", error);
       return [];
-    }
-  }
-
-  // 保存路由规则列表
-  static async saveRoutingRules(rules) {
-    try {
-      const json = JSON.stringify(rules, null, 4);
-      // 使用 base64 编码避免特殊字符问题
-      const base64 = btoa(unescape(encodeURIComponent(json)));
-      await KSU.exec(
-        `echo '${base64}' | base64 -d > ${KSU.MODULE_PATH}/config/xray/confdir/routing/routing_rules.json`,
-      );
-      return { success: true };
-    } catch (error: any) {
-      console.error("保存路由规则失败:", error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  // 应用路由规则（在前端生成 routing.json）
-  static async applyRoutingRules(
-    rules: RoutingRule[],
-  ): Promise<OperationResult> {
-    try {
-      // 构建路由规则数组
-      const xrayRules: XrayRule[] = [];
-
-      for (const rule of rules) {
-        if (rule.enabled === false) continue;
-
-        const xrayRule: XrayRule = {
-          type: "field",
-          outboundTag: rule.outboundTag || "proxy",
-        };
-
-        // 处理 domain
-        if (rule.domain) {
-          xrayRule.domain = rule.domain.split(",").map((d) => {
-            d = d.trim();
-            if (
-              d.startsWith("geosite:") ||
-              d.startsWith("domain:") ||
-              d.startsWith("full:") ||
-              d.startsWith("regexp:")
-            ) {
-              return d;
-            }
-            return `domain:${d}`;
-          });
-        }
-
-        // 处理 ip
-        if (rule.ip) {
-          xrayRule.ip = rule.ip.split(",").map((i) => i.trim());
-        }
-
-        // 处理 port
-        if (rule.port) {
-          xrayRule.port = rule.port.trim();
-        }
-
-        // 处理 protocol
-        if (rule.protocol) {
-          xrayRule.protocol = rule.protocol.split(",").map((p) => p.trim());
-        }
-
-        // 处理 network
-        if (rule.network) {
-          xrayRule.network = rule.network.trim();
-        }
-
-        // 处理 inboundTag
-        if (rule.inboundTag) {
-          xrayRule.inboundTag = rule.inboundTag.split(",").map((i) => i.trim());
-        }
-
-        xrayRules.push(xrayRule);
-      }
-
-      // 添加固定的内部 DNS 规则
-      xrayRules.push({
-        type: "field",
-        inboundTag: ["domestic-dns"],
-        outboundTag: "direct",
-      });
-      xrayRules.push({
-        type: "field",
-        inboundTag: ["dns-module"],
-        outboundTag: "proxy",
-      });
-
-      // 构建完整的路由配置
-      const routingConfig = {
-        routing: {
-          domainStrategy: "AsIs",
-          rules: xrayRules,
-        },
-      };
-
-      // 使用 base64 编码写入文件
-      const json = JSON.stringify(routingConfig, null, 4);
-      const base64 = btoa(unescape(encodeURIComponent(json)));
-      await KSU.exec(
-        `echo '${base64}' | base64 -d > ${KSU.MODULE_PATH}/config/xray/confdir/routing/rule.json`,
-      );
-
-      return { success: true };
-    } catch (error: any) {
-      console.error("应用路由规则失败:", error);
-      return { success: false, error: error.message };
     }
   }
 
@@ -707,69 +570,4 @@ export class SettingsService {
     }
   }
 
-  // ===================== Clash 规则导入 =====================
-
-  /**
-   * 获取 Clash 规则列表 URL 内容
-   */
-  static async fetchClashRules(url: string): Promise<string | null> {
-    return KSU.fetchUrl(url);
-  }
-
-  /**
-   * 解析 Clash YAML payload 格式
-   * @param content YAML 内容
-   * @returns 域名列表
-   */
-  static parseClashPayload(content: string): string[] {
-    const domains: string[] = [];
-    const lines = content.split("\n");
-    let inPayload = false;
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      // 检测 payload: 开始
-      if (trimmed === "payload:") {
-        inPayload = true;
-        continue;
-      }
-
-      // 如果在 payload 区域，解析域名
-      if (inPayload) {
-        // 检测是否结束 (遇到非 - 开头的行且非空)
-        if (trimmed && !trimmed.startsWith("-") && !trimmed.startsWith("#")) {
-          break;
-        }
-
-        // 解析 - 'domain' 或 - "domain" 或 - domain 格式
-        if (trimmed.startsWith("-")) {
-          let domain = trimmed.substring(1).trim();
-          // 移除引号
-          domain = domain.replace(/^['"]|['"]$/g, "");
-          // 移除 Clash 特殊前缀 (DOMAIN, DOMAIN-SUFFIX 等)
-          domain = domain.replace(/^\+\.|^\*\./, "");
-
-          if (domain && !domain.startsWith("#")) {
-            domains.push(domain);
-          }
-        }
-      }
-    }
-
-    return domains;
-  }
-
-  /**
-   * 完整导入流程：获取 URL 内容并解析
-   * @param url Clash 规则列表 URL
-   * @returns 解析后的域名列表
-   */
-  static async importClashRulesFromUrl(url: string): Promise<string[]> {
-    const content = await this.fetchClashRules(url);
-    if (!content) {
-      return [];
-    }
-    return this.parseClashPayload(content);
-  }
 }

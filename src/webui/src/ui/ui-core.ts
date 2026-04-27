@@ -253,30 +253,9 @@ export class UI {
   }
 
   setupDialogs(): void {
-    const importMenu = document.getElementById("import-menu") as any;
-
-    document
-      .getElementById("import-full-config")
-      ?.addEventListener("click", () => {
-        importMenu.open = false;
-        this.showConfigDialog();
-      });
-
-    document
-      .getElementById("config-cancel-btn")
-      ?.addEventListener("click", () => {
-        (document.getElementById("config-dialog") as any).open = false;
-      });
-
     document.getElementById("uid-cancel-btn")?.addEventListener("click", () => {
       (document.getElementById("uid-dialog") as any).open = false;
     });
-
-    document
-      .getElementById("config-save-btn")
-      ?.addEventListener("click", async () => {
-        await this.configPage.saveConfig();
-      });
 
     document
       .getElementById("app-selector-cancel")
@@ -415,9 +394,5 @@ export class UI {
     } catch (error) {
       console.error("Error in updateAllPages:", error);
     }
-  }
-
-  async showConfigDialog(filename: string | null = null): Promise<void> {
-    await this.configPage.showDialog(filename);
   }
 }
