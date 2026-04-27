@@ -28,7 +28,6 @@ readonly EXECUTABLE_FILES="
     action.sh
     scripts/cli
     scripts/core/service.sh
-    scripts/core/switch-config.sh
     scripts/network/tproxy.sh
     scripts/utils/update-xray.sh
     scripts/utils/oneplus_a16_fix.sh

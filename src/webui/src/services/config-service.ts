@@ -153,23 +153,15 @@ EOF
   // 切换配置
   static async switchConfig(filename: string): Promise<void> {
     const configPath = `${KSU.MODULE_PATH}/config/xray/configs/${filename}`;
+    await KSU.exec(
+      `sed -i 's|^CURRENT_CONFIG=.*|CURRENT_CONFIG="${configPath}"|' ${KSU.MODULE_PATH}/config/module.conf`,
+    );
 
-    // 需要检查服务状态来决定是热切换还是直接修改配置
-    // 为了避免循环依赖，这里重复一下 pidof 检查，或者简单地都尝试调用 switch-config.sh
-    // switch-config.sh 内部建议增加判断逻辑，目前 KSUService 逻辑是先检查状态
     const pidOutput = await KSU.exec(
       `pidof -s /data/adb/modules/netproxy/bin/xray 2>/dev/null || echo`,
     );
-    const isRunning = pidOutput.trim() !== "";
-
-    if (isRunning) {
-      await KSU.exec(
-        `sh ${KSU.MODULE_PATH}/scripts/core/switch-config.sh '${configPath}'`,
-      );
-    } else {
-      await KSU.exec(
-        `sed -i 's|^CURRENT_CONFIG=.*|CURRENT_CONFIG="${configPath}"|' ${KSU.MODULE_PATH}/config/module.conf`,
-      );
+    if (pidOutput.trim() !== "") {
+      await KSU.exec(`sh ${KSU.MODULE_PATH}/scripts/core/service.sh restart`);
     }
   }
 }

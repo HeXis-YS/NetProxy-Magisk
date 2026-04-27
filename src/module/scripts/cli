@@ -242,13 +242,13 @@ cmd_config() {
             fi
             
             info "切换配置: $(basename "$config_path")"
+            sed -i "s|^CURRENT_CONFIG=.*|CURRENT_CONFIG=\"$config_path\"|" "$MODULE_CONF"
             
             if is_running; then
                 info "服务运行中，重启应用完整配置..."
-                sh "$SCRIPTS_DIR/core/switch-config.sh" "$config_path"
+                sh "$SCRIPTS_DIR/core/service.sh" restart
                 info "配置切换完成"
             else
-                sed -i "s|^CURRENT_CONFIG=.*|CURRENT_CONFIG=\"$config_path\"|" "$MODULE_CONF"
                 info "配置已更新，下次启动时生效"
             fi
             ;;
