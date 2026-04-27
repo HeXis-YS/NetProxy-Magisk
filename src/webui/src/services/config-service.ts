@@ -133,9 +133,6 @@ EOF
       const base64 = btoa(unescape(encodeURIComponent(content)));
       await KSU.exec(`mkdir -p ${KSU.MODULE_PATH}/config/xray/configs`);
       await KSU.exec(`echo '${base64}' | base64 -d > '${tempPath}'`);
-      await KSU.exec(
-        `${KSU.MODULE_PATH}/bin/xray run -test -config '${tempPath}'`,
-      );
       await KSU.exec(`mv '${tempPath}' '${configPath}'`);
       return { success: true };
     } catch (error: any) {

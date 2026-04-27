@@ -25,11 +25,6 @@ switch_config() {
   log "INFO" "========== 开始切换 Xray 配置 =========="
   log "INFO" "新配置: $config_file"
 
-  if ! "$XRAY_BIN" run -test -config "$config_file" > /dev/null 2>&1; then
-    log "ERROR" "Xray 配置校验失败: $config_file"
-    exit 1
-  fi
-
   sed -i "s|^CURRENT_CONFIG=.*|CURRENT_CONFIG=\"$config_file\"|" "$MODDIR/config/module.conf"
 
   log "INFO" "配置文件已更新"

@@ -4,7 +4,6 @@
   },
   "api": {
     "tag": "api",
-    "listen": "127.0.0.1:8080",
     "services": [
       "HandlerService",
       "LoggerService",
@@ -46,6 +45,15 @@
     ]
   },
   "inbounds": [
+    {
+      "tag": "api",
+      "listen": "127.0.0.1",
+      "port": 8080,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1"
+      }
+    },
     {
       "tag": "tproxy-in",
       "port": 12345,
