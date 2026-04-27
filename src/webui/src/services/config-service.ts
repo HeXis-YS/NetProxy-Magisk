@@ -7,12 +7,6 @@ interface ConfigGroup {
   configs: string[];
 }
 
-interface ConfigInfo {
-  protocol: string;
-  address: string;
-  port: string;
-}
-
 interface OperationResult {
   success: boolean;
   error?: string;
@@ -46,71 +40,6 @@ export class ConfigService {
     } catch (e) { }
 
     return groups;
-  }
-
-  // 批量读取多个配置文件的基本信息
-  static async batchReadConfigInfos(
-    filePaths: string[],
-  ): Promise<Map<string, ConfigInfo>> {
-    if (!filePaths || filePaths.length === 0) return new Map();
-
-    const basePath = `${KSU.MODULE_PATH}/config/xray/configs`;
-    const fileList = filePaths.map((f) => `${basePath}/${f}`).join("\n");
-
-    const result = await KSU.exec(`
-            while IFS= read -r f; do
-                [ -z "$f" ] && continue
-                echo "===FILE:$(basename "$f")==="
-                cat "$f" 2>/dev/null
-            done << 'EOF'
-${fileList}
-EOF
-        `);
-
-    if (!result) return new Map();
-
-    const infoMap = new Map<string, ConfigInfo>();
-    const blocks = result.split("===FILE:").filter((b) => b.trim());
-
-    for (const block of blocks) {
-      const lines = block.split("\n");
-      const filename = lines[0].replace("===", "").trim();
-      const content = lines.slice(1).join("\n");
-
-      let protocol = "unknown";
-      let address = "";
-      let port = "";
-      try {
-        const config = JSON.parse(content);
-        const outbounds = Array.isArray(config.outbounds) ? config.outbounds : [];
-        const proxyOutbound =
-          outbounds.find((outbound) => outbound.tag === "proxy") ||
-          outbounds.find(
-            (outbound) =>
-              outbound.protocol &&
-              !["freedom", "blackhole", "dns"].includes(outbound.protocol),
-          ) ||
-          outbounds[0];
-
-        if (proxyOutbound) {
-          protocol = proxyOutbound.protocol || protocol;
-          const settings = proxyOutbound.settings || {};
-          if (settings.vnext?.[0]) {
-            address = settings.vnext[0].address || "";
-            port = String(settings.vnext[0].port || "");
-          } else if (settings.servers?.[0]) {
-            address = settings.servers[0].address || "";
-            port = String(settings.servers[0].port || "");
-          }
-        }
-      } catch (error) {
-        protocol = "invalid";
-      }
-
-      infoMap.set(filename, { protocol, address, port });
-    }
-
-    return infoMap;
   }
 
   static async readConfig(filename: string): Promise<string> {
